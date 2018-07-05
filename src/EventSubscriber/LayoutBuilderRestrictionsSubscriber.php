@@ -29,7 +29,7 @@ class LayoutBuilderRestrictionsSubscriber implements EventSubscriberInterface {
   protected $moduleHandler;
 
   /**
-   * LayoutBuilderEnhancerSubscriber constructor.
+   * LayoutBuilderRestrictionsSubscriber constructor.
    */
   public function __construct(CurrentRouteMatch $route_match, ModuleHandlerInterface $handler) {
     $this->routeMatch = $route_match;
@@ -98,7 +98,7 @@ class LayoutBuilderRestrictionsSubscriber implements EventSubscriberInterface {
     }
     $keys = $this->moduleHandler->invokeAll('layout_builder_restrictions_allowed_block_keys');
     if (!empty($keys)) {
-      $this->moduleHandler->alter('layout_builder_enhancer_allowed_block_keys', $keys);
+      $this->moduleHandler->alter('layout_builder_restrictions_allowed_block_keys', $keys);
       foreach (Element::children($result) as $delta) {
         if (!in_array($delta, $keys)) {
           $result[$delta]['#access'] = FALSE;
