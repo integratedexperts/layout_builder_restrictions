@@ -1,6 +1,7 @@
 name: Layout Builder Restrictions
 core: 8.x
+description: 'Manage which fields & layouts are available in Layout Builder'
 type: module
 dependencies:
-  - system (>=8.5.0-rc1)
-  - layout_builder
+  - drupal:system (>=8.5.0-rc1)
+  - drupal:layout_builder
