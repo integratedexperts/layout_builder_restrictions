@@ -4,6 +4,7 @@ namespace Drupal\layout_builder_restrictions\Form;
 
 use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Form\FormStateInterface;
@@ -19,6 +20,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class FormAlter implements ContainerInjectionInterface {
 
+  use DependencySerializationTrait;
   use LayoutBuilderContextTrait;
 
   /**
@@ -114,100 +116,116 @@ class FormAlter implements ContainerInjectionInterface {
    */
   public function alterEntityViewDisplayForm(&$form, FormStateInterface $form_state, $form_id) {
     $display = $form_state->getFormObject()->getEntity();
-    $form['#entity_builders'][] = [$this, 'entityFormEntityBuild'];
-
-    // Block settings.
-    $form['layout']['layout_builder_restrictions']['allowed_blocks'] = [
-      '#type' => 'details',
-      '#title' => t('Blocks available for placement'),
-    ];
-    $allowed_blocks = $display->getThirdPartySetting('layout_builder_restrictions', 'allowed_blocks', []);
-    foreach ($this->getBlockDefinitions($display) as $category => $blocks) {
-      $category_form = [
-        '#type' => 'fieldset',
-        '#title' => $category,
-        '#parents' => ['layout_builder_restrictions', 'allowed_blocks'],
-      ];
-      $category_setting = in_array($category, array_keys($allowed_blocks)) ? "restricted" : "all";
-      $category_form['restriction_behavior'] = [
-        '#type' => 'radios',
-        '#options' => [
-          "all" => t('Allow all existing & new %category blocks.', ['%category' => $category]),
-          "restricted" => t('Choose specific %category blocks:', ['%category' => $category]),
-        ],
-        '#default_value' => $category_setting,
-        '#parents' => [
-          'layout_builder_restrictions',
-          'allowed_blocks',
-          $category,
-          'restriction',
+    $is_enabled = $display->isLayoutBuilderEnabled();
+    if ($is_enabled) {
+      $form['#entity_builders'][] = [$this, 'entityFormEntityBuild'];
+      // Block settings.
+      $form['layout']['layout_builder_restrictions']['allowed_blocks'] = [
+        '#type' => 'details',
+        '#title' => t('Blocks available for placement'),
+        '#states' => [
+          'disabled' => [
+            ':input[name="layout[enabled]"]' => ['checked' => FALSE],
+          ],
+          'invisible' => [
+            ':input[name="layout[enabled]"]' => ['checked' => FALSE],
+          ],
         ],
       ];
-      foreach ($blocks as $block_id => $block) {
-        $enabled = FALSE;
-        if ($category_setting == 'restricted' && in_array($block_id, $allowed_blocks[$category])) {
-          $enabled = TRUE;
-        }
-        $category_form[$block_id] = [
-          '#type' => 'checkbox',
-          '#title' => $block['admin_label'],
-          '#default_value' => $enabled,
+      $allowed_blocks = $display->getThirdPartySetting('layout_builder_restrictions', 'allowed_blocks', []);
+      foreach ($this->getBlockDefinitions($display) as $category => $blocks) {
+        $category_form = [
+          '#type' => 'fieldset',
+          '#title' => $category,
+          '#parents' => ['layout_builder_restrictions', 'allowed_blocks'],
+        ];
+        $category_setting = in_array($category, array_keys($allowed_blocks)) ? "restricted" : "all";
+        $category_form['restriction_behavior'] = [
+          '#type' => 'radios',
+          '#options' => [
+            "all" => t('Allow all existing & new %category blocks.', ['%category' => $category]),
+            "restricted" => t('Choose specific %category blocks:', ['%category' => $category]),
+          ],
+          '#default_value' => $category_setting,
           '#parents' => [
             'layout_builder_restrictions',
             'allowed_blocks',
             $category,
-            $block_id,
+            'restriction',
+          ],
+        ];
+        foreach ($blocks as $block_id => $block) {
+          $enabled = FALSE;
+          if ($category_setting == 'restricted' && in_array($block_id, $allowed_blocks[$category])) {
+            $enabled = TRUE;
+          }
+          $category_form[$block_id] = [
+            '#type' => 'checkbox',
+            '#title' => $block['admin_label'],
+            '#default_value' => $enabled,
+            '#parents' => [
+              'layout_builder_restrictions',
+              'allowed_blocks',
+              $category,
+              $block_id,
+            ],
+            '#states' => [
+              'invisible' => [
+                ':input[name="layout_builder_restrictions[allowed_blocks][' . $category . '][restriction]"]' => ['value' => "all"],
+              ],
+            ],
+          ];
+        }
+        $form['layout']['layout_builder_restrictions']['allowed_blocks'][$category] = $category_form;
+      }
+      // Layout settings.
+      $allowed_layouts = $display->getThirdPartySetting('layout_builder_restrictions', 'allowed_layouts', []);
+      $layout_form = [
+        '#type' => 'details',
+        '#title' => t('Layouts available for sections'),
+        '#parents' => ['layout_builder_restrictions', 'allowed_layouts'],
+        '#states' => [
+          'disabled' => [
+            ':input[name="layout[enabled]"]' => ['checked' => FALSE],
+          ],
+          'invisible' => [
+            ':input[name="layout[enabled]"]' => ['checked' => FALSE],
+          ],
+        ],
+      ];
+      $layout_form['layout_restriction'] = [
+        '#type' => 'radios',
+        '#options' => [
+          "all" => t('Allow all existing & new layouts.'),
+          "restricted" => t('Allow only specific layouts:'),
+        ],
+        '#default_value' => !empty($allowed_layouts) ? "restricted" : "all",
+      ];
+      $definitions = $this->layoutManager->getFilteredDefinitions('layout_builder', []);
+      foreach ($definitions as $plugin_id => $definition) {
+        $enabled = FALSE;
+        if (!empty($allowed_layouts) && in_array($plugin_id, $allowed_layouts)) {
+          $enabled = TRUE;
+        }
+        $layout_form['layouts'][$plugin_id] = [
+          '#type' => 'checkbox',
+          '#default_value' => $enabled,
+          '#description' => [
+            $definition->getIcon(60, 80, 1, 3),
+            [
+              '#type' => 'container',
+              '#children' => $definition->getLabel(),
+            ],
           ],
           '#states' => [
             'invisible' => [
-              ':input[name="layout_builder_restrictions[allowed_blocks][' . $category . '][restriction]"]' => ['value' => "all"],
+              ':input[name="layout_builder_restrictions[allowed_layouts][layout_restriction]"]' => ['value' => "all"],
             ],
           ],
         ];
       }
-      $form['layout']['layout_builder_restrictions']['allowed_blocks'][$category] = $category_form;
+      $form['layout']['layout_builder_restrictions']['allowed_layouts'] = $layout_form;
     }
-
-    // Layout settings.
-    $allowed_layouts = $display->getThirdPartySetting('layout_builder_restrictions', 'allowed_layouts', []);
-    $layout_form = [
-      '#type' => 'details',
-      '#title' => t('Layouts available for sections'),
-      '#parents' => ['layout_builder_restrictions', 'allowed_layouts'],
-    ];
-    $layout_form['layout_restriction'] = [
-      '#type' => 'radios',
-      '#options' => [
-        "all" => t('Allow all existing & new layouts.'),
-        "restricted" => t('Allow only specific layouts:'),
-      ],
-      '#default_value' => !empty($allowed_layouts) ? "restricted" : "all",
-    ];
-    $definitions = $this->layoutManager->getFilteredDefinitions('layout_builder', []);
-    foreach ($definitions as $plugin_id => $definition) {
-      $enabled = FALSE;
-      if (!empty($allowed_layouts) && in_array($plugin_id, $allowed_layouts)) {
-        $enabled = TRUE;
-      }
-      $layout_form['layouts'][$plugin_id] = [
-        '#type' => 'checkbox',
-        '#default_value' => $enabled,
-        '#description' => [
-          $definition->getIcon(60, 80, 1, 3),
-          [
-            '#type' => 'container',
-            '#children' => $definition->getLabel(),
-          ],
-        ],
-        '#states' => [
-          'invisible' => [
-            ':input[name="layout_builder_restrictions[allowed_layouts][layout_restriction]"]' => ['value' => "all"],
-          ],
-        ],
-      ];
-    }
-    $form['layout']['layout_builder_restrictions']['allowed_layouts'] = $layout_form;
-
   }
 
   /**
