@@ -2,14 +2,14 @@
 
 namespace Drupal\Tests\layout_builder_restrictions\FunctionalJavascript;
 
-use Drupal\FunctionalJavascriptTests\JavascriptTestBase;
+use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 
 /**
  * Demonstrate that blocks can be individually restricted.
  *
  * @group layout_builder_restrictions
  */
-class LayoutBuilderRestrictionsTest extends JavascriptTestBase {
+class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
 
   /**
    * {@inheritdoc}
@@ -50,6 +50,10 @@ class LayoutBuilderRestrictionsTest extends JavascriptTestBase {
     $field_ui_prefix = 'admin/structure/types/manage/bundle_with_section_field';
     // From the manage display page, go to manage the layout.
     $this->drupalGet("$field_ui_prefix/display/default");
+    // Checking is_enable will show allow_custom.
+    $page->checkField('layout[enabled]');
+    $page->checkField('layout[allow_custom]');
+    $page->pressButton('Save');
     $assert_session->linkExists('Manage layout');
     $this->clickLink('Manage layout');
     $this->clickLink('Add Block');
@@ -61,10 +65,10 @@ class LayoutBuilderRestrictionsTest extends JavascriptTestBase {
     $this->drupalGet("$field_ui_prefix/display/default");
     $element = $page->find('xpath', '//*[@id="edit-layout-layout-builder-restrictions-allowed-blocks"]/summary');
     $element->click();
-    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-restriction-all"]');
-    $assert_session->checkboxChecked('edit-layout-builder-restrictions-allowed-blocks-content-restriction-all');
-    $assert_session->checkboxNotChecked('edit-layout-builder-restrictions-allowed-blocks-content-restriction-restricted');
-    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-restriction-restricted"]');
+    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-all"]');
+    $assert_session->checkboxChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-all');
+    $assert_session->checkboxNotChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-restricted');
+    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-restricted"]');
     $element->click();
     $page->pressButton('Save');
 
@@ -83,8 +87,8 @@ class LayoutBuilderRestrictionsTest extends JavascriptTestBase {
     $this->drupalGet("$field_ui_prefix/display/default");
     $element = $page->find('xpath', '//*[@id="edit-layout-layout-builder-restrictions-allowed-blocks"]/summary');
     $element->click();
-    $assert_session->checkboxChecked('edit-layout-builder-restrictions-allowed-blocks-content-restriction-restricted');
-    $page->checkField('layout_builder_restrictions[allowed_blocks][Content][field_block:node:bundle_with_section_field:body]');
+    $assert_session->checkboxChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-restricted');
+    $page->checkField('layout_builder_restrictions[allowed_blocks][Content fields][field_block:node:bundle_with_section_field:body]');
     $page->pressButton('Save');
 
     $this->drupalGet("$field_ui_prefix/display/default");
@@ -109,6 +113,10 @@ class LayoutBuilderRestrictionsTest extends JavascriptTestBase {
     $page = $this->getSession()->getPage();
     $field_ui_prefix = 'admin/structure/types/manage/bundle_with_section_field';
     $this->drupalGet("$field_ui_prefix/display/default");
+    // Checking is_enable will show allow_custom.
+    $page->checkField('layout[enabled]');
+    $page->checkField('layout[allow_custom]');
+    $page->pressButton('Save');
     $assert_session->linkExists('Manage layout');
     $this->clickLink('Manage layout');
     $assert_session->addressEquals("$field_ui_prefix/display-layout/default");

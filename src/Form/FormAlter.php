@@ -6,7 +6,6 @@ use Drupal\Core\Block\BlockManagerInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Layout\LayoutPluginManagerInterface;
 use Drupal\Core\Plugin\Context\ContextHandlerInterface;
@@ -234,31 +233,25 @@ class FormAlter implements ContainerInjectionInterface {
   public function entityFormEntityBuild($entity_type_id, LayoutEntityDisplayInterface $display, &$form, FormStateInterface &$form_state) {
     // Set allowed blocks.
     $allowed_blocks = [];
-    foreach ($this->getBlockDefinitions($display) as $category => $blocks) {
-      $category_setting = $form_state->getValue([
-        'layout_builder_restrictions',
-        'allowed_blocks',
-        $category,
-        'restriction',
-      ]);
-      if ($category_setting == 'restricted') {
-        // A category that has been restricted starts with zero allowed blocks.
-        $allowed_blocks[$category] = [];
-        foreach ($blocks as $block_id => $block) {
-          $block_setting = $form_state->getValue([
-            'layout_builder_restrictions',
-            'allowed_blocks',
-            $category,
-            $block_id,
-          ]);
-          if ($block_setting == '1') {
-            // Include only checked blocks.
-            $allowed_blocks[$category][] = $block_id;
+    $categories = $form_state->getValue([
+      'layout_builder_restrictions',
+      'allowed_blocks',
+    ]);
+    if (!empty($categories)) {
+      foreach ($categories as $category => $category_setting) {
+        if ($category_setting['restriction'] === 'restricted') {
+          $allowed_blocks[$category] = [];
+          unset($category_setting['restriction']);
+          foreach ($category_setting as $block_id => $block_setting) {
+            if ($block_setting == '1') {
+              // Include only checked blocks.
+              $allowed_blocks[$category][] = $block_id;
+            }
           }
         }
       }
+      $display->setThirdPartySetting('layout_builder_restrictions', 'allowed_blocks', $allowed_blocks);
     }
-    $display->setThirdPartySetting('layout_builder_restrictions', 'allowed_blocks', $allowed_blocks);
 
     // Set allowed layouts.
     $layout_restriction = $form_state->getValue([
