@@ -65,10 +65,10 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
     $this->drupalGet("$field_ui_prefix/display/default");
     $element = $page->find('xpath', '//*[@id="edit-layout-layout-builder-restrictions-allowed-blocks"]/summary');
     $element->click();
-    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-all"]');
-    $assert_session->checkboxChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-all');
-    $assert_session->checkboxNotChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-restricted');
-    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-restricted"]');
+    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-restriction-all"]');
+    $assert_session->checkboxChecked('edit-layout-builder-restrictions-allowed-blocks-content-restriction-all');
+    $assert_session->checkboxNotChecked('edit-layout-builder-restrictions-allowed-blocks-content-restriction-restricted');
+    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-restriction-restricted"]');
     $element->click();
     $page->pressButton('Save');
 
@@ -87,8 +87,8 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
     $this->drupalGet("$field_ui_prefix/display/default");
     $element = $page->find('xpath', '//*[@id="edit-layout-layout-builder-restrictions-allowed-blocks"]/summary');
     $element->click();
-    $assert_session->checkboxChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-restricted');
-    $page->checkField('layout_builder_restrictions[allowed_blocks][Content fields][field_block:node:bundle_with_section_field:body]');
+    $assert_session->checkboxChecked('edit-layout-builder-restrictions-allowed-blocks-content-restriction-restricted');
+    $page->checkField('layout_builder_restrictions[allowed_blocks][Content][field_block:node:bundle_with_section_field:body]');
     $page->pressButton('Save');
 
     $this->drupalGet("$field_ui_prefix/display/default");
