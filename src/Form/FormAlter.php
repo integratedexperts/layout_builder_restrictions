@@ -13,6 +13,7 @@ use Drupal\layout_builder\Context\LayoutBuilderContextTrait;
 use Drupal\layout_builder\Entity\LayoutEntityDisplayInterface;
 use Drupal\layout_builder\SectionStorage\SectionStorageManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Plugin\Context\EntityContext;
 
 /**
  * Supplement form UI to add setting for which blocks & layouts are available.
@@ -103,7 +104,14 @@ class FormAlter implements ContainerInjectionInterface {
    *   plugin IDs and the values are plugin definitions.
    */
   protected function getBlockDefinitions(LayoutEntityDisplayInterface $display) {
-    $section_storage = $this->sectionStorageManager->loadEmpty('defaults')->setSectionList($display);
+    // Check for 'load' method, which only exists in > 8.7.
+    if (method_exists($this->sectionStorageManager, 'load')) {
+      $section_storage = $this->sectionStorageManager->load('defaults', ['display' => EntityContext::fromEntity($display)]);
+    }
+    else {
+      // BC for < 8.7.
+      $section_storage = $this->sectionStorageManager->loadEmpty('defaults')->setSectionList($display);
+    }
     // Do not use the plugin filterer here, but still filter by contexts.
     $definitions = $this->blockManager->getDefinitions();
     $definitions = $this->contextHandler->filterPluginDefinitionsByContexts($this->getAvailableContexts($section_storage), $definitions);
