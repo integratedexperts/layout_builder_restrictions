@@ -5,6 +5,7 @@
  * Module file for layout builder restrictions.
  */
 
+use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\layout_builder\OverridesSectionStorageInterface;
 use Drupal\layout_builder_restrictions\Form\FormAlter;
@@ -74,10 +75,13 @@ function layout_builder_restrictions_plugin_filter_layout__layout_builder_alter(
   // Respect restrictions on allowed layouts specified by section storage.
   if (isset($extra['section_storage'])) {
     $default = $extra['section_storage'] instanceof OverridesSectionStorageInterface ? $extra['section_storage']->getDefaultSectionStorage() : $extra['section_storage'];
-    $allowed_layouts = $default->getThirdPartySetting('layout_builder_restrictions', 'allowed_layouts', []);
-    // Filter blocks from entity-specific SectionStorage (i.e., UI).
-    if (!empty($allowed_layouts)) {
-      $definitions = array_intersect_key($definitions, array_flip($allowed_layouts));
+
+    if ($default instanceof ThirdPartySettingsInterface) {
+      $allowed_layouts = $default->getThirdPartySetting('layout_builder_restrictions', 'allowed_layouts', []);
+      // Filter blocks from entity-specific SectionStorage (i.e., UI).
+      if (!empty($allowed_layouts)) {
+        $definitions = array_intersect_key($definitions, array_flip($allowed_layouts));
+      }
     }
   }
 }
