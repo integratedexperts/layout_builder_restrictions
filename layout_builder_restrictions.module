@@ -34,7 +34,11 @@ function layout_builder_restrictions_plugin_filter_block__layout_builder_alter(a
   // Respect restrictions on allowed blocks specified by the section storage.
   if (isset($extra['section_storage'])) {
     $default = $extra['section_storage'] instanceof OverridesSectionStorageInterface ? $extra['section_storage']->getDefaultSectionStorage() : $extra['section_storage'];
-    $allowed_blocks = $default->getThirdPartySetting('layout_builder_restrictions', 'allowed_blocks', []);
+
+    $allowed_blocks = $default instanceof ThirdPartySettingsInterface
+      ? $default->getThirdPartySetting('layout_builder_restrictions', 'allowed_blocks', [])
+      : [];
+
     // Filter blocks from entity-specific SectionStorage (i.e., UI).
     if (!empty($allowed_blocks)) {
       foreach ($definitions as $delta => $definition) {

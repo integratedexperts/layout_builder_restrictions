@@ -5,3 +5,5 @@ type: module
 dependencies:
   - drupal:system (>=8.5.0-rc1)
   - drupal:layout_builder
+test_dependencies:
+  - layout_library:layout_library
