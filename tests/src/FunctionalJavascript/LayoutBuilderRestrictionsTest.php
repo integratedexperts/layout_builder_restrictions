@@ -76,7 +76,7 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
     $this->drupalGet("$field_ui_prefix/display/default");
     $assert_session->linkExists('Manage layout');
     $this->clickLink('Manage layout');
-    $assert_session->addressEquals("$field_ui_prefix/display-layout/default");
+    $assert_session->addressEquals("$field_ui_prefix/display/default/layout");
     // The "body" field is no longer present.
     $assert_session->elementExists('css', '.field--name-body');
     $this->clickLink('Add Block');
@@ -94,7 +94,7 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
     $this->drupalGet("$field_ui_prefix/display/default");
     $assert_session->linkExists('Manage layout');
     $this->clickLink('Manage layout');
-    $assert_session->addressEquals("$field_ui_prefix/display-layout/default");
+    $assert_session->addressEquals("$field_ui_prefix/display/default/layout");
     // The "body" field is once again present.
     $assert_session->elementExists('css', '.field--name-body');
     $this->clickLink('Add Block');
@@ -119,7 +119,7 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
     $page->pressButton('Save');
     $assert_session->linkExists('Manage layout');
     $this->clickLink('Manage layout');
-    $assert_session->addressEquals("$field_ui_prefix/display-layout/default");
+    $assert_session->addressEquals("$field_ui_prefix/display/default/layout");
     // Baseline: 'One column' & 'Two column' layouts are available.
     $assert_session->elementExists('css', '.field--name-body');
     $this->clickLink('Add Section');
@@ -144,7 +144,7 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
     $this->drupalGet("$field_ui_prefix/display/default");
     $assert_session->linkExists('Manage layout');
     $this->clickLink('Manage layout');
-    $assert_session->addressEquals("$field_ui_prefix/display-layout/default");
+    $assert_session->addressEquals("$field_ui_prefix/display/default/layout");
     $this->clickLink('Add Section');
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->linkNotExists('One column');
