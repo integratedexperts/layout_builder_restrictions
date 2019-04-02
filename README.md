@@ -9,9 +9,15 @@
 
 INTRODUCTION
 ------------
-Out of the box, the core [Layout Builder](https://www.drupal.org/project/ideas/issues/2884601) module allows all blocks/fields and layouts to be used. This module allows site builders (i.e., those managing content types) to set which which blocks and which layouts should be available for placement in Layout Builder.
+The core [Layout Builder](https://www.drupal.org/project/ideas/issues/2884601) module allows all blocks/fields and layouts to be used. This module allows site builders (i.e., those managing content types) to set which which blocks and which layouts should be available for placement in Layout Builder.
 
-Each entity type can be restricted individually. The following image shows the user interface for restricting the "one-column" layout:
+You can restrict which blocks are available to be placed based on different contexts:
+1. Per entity type view mode
+2. Per layout region
+
+Developers can add additional/alternate restriction contexts via Drupal plugins (see below).
+
+The following image shows the user interface for restricting the "one-column" layout:
 
 ![alt text](https://www.drupal.org/files/layout_builder_restrictions.gif "Restrict one-column layout with checkbox in UI")
 
