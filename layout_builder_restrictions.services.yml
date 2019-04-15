@@ -4,3 +4,6 @@ services:
     arguments: ['@current_route_match', '@module_handler']
     tags:
       - { name: event_subscriber }
+  plugin.manager.layout_builder_restriction:
+    class: Drupal\layout_builder_restrictions\Plugin\LayoutBuilderRestrictionManager
+    parent: default_plugin_manager
