@@ -5,6 +5,7 @@ namespace Drupal\layout_builder_restrictions\Plugin\LayoutBuilderRestriction;
 use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
 use Drupal\layout_builder_restrictions\Plugin\LayoutBuilderRestrictionBase;
 use Drupal\layout_builder\OverridesSectionStorageInterface;
+use Drupal\layout_builder\SectionStorageInterface;
 
 /**
  * EntityViewModeRestriction Plugin.
@@ -17,7 +18,7 @@ use Drupal\layout_builder\OverridesSectionStorageInterface;
 class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
 
   /**
-   * Restrict placeable blocks based on entity type & view mode.
+   * {@inheritdoc}
    */
   public function alterBlockDefinitions(array $definitions, array $context) {
     // Respect restrictions on allowed blocks specified by the section storage.
@@ -44,11 +45,7 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
   }
 
   /**
-   * Alter the section definitions.
-   *
-   * In this example, remove the `layout_onecol` and `layout_twocol_section`
-   * sections if we are on a node entity, and the node bundle
-   * is 'utexas_flex_page'.
+   * {@inheritdoc}
    */
   public function alterSectionDefinitions(array $definitions, array $context) {
     // Respect restrictions on allowed layouts specified by section storage.
@@ -63,6 +60,68 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
       }
     }
     return $definitions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function blockAllowedinContext(SectionStorageInterface $section_storage, $delta_from, $delta_to, $region_to, $block_uuid, $preceding_block_uuid = NULL) {
+    $contexts = $section_storage->getContexts();
+    if ($section_storage instanceof OverridesSectionStorageInterface) {
+      $entity = $contexts['entity']->getContextValue();
+      $view_mode = $contexts['view_mode']->getContextValue();
+      $entity_type = $entity->getEntityTypeId();
+      $bundle = $entity->bundle();
+    }
+    else {
+      $entity = $contexts['display']->getContextValue();
+      $view_mode = $entity->getMode();
+      $bundle = $entity->getTargetBundle();
+      $entity_type = $entity->getTargetEntityTypeId();
+    }
+    // Get "from" section and layout id. (not needed?)
+    $section_from = $section_storage->getSection($delta_from);
+    $layout_id_from = $section_from->getLayoutId();
+
+    // Get "to" section and layout id.
+    $section_to = $section_storage->getSection($delta_to);
+    $layout_id_to = $section_to->getLayoutId();
+
+    // Get block information.
+    $component = $section_from->getComponent($block_uuid)->toArray();
+    $block_id = $component['configuration']['id'];
+    $context = $entity_type . "." . $bundle . "." . $view_mode;
+    $storage = \Drupal::entityTypeManager()->getStorage('entity_view_display');
+    $view_display = $storage->load($context);
+    $allowed_blocks = $view_display->getThirdPartySetting('layout_builder_restrictions', 'allowed_blocks', []);
+    $block_id_parts = explode(':', $block_id);
+    if (!empty($allowed_blocks)) {
+      $has_restrictions = TRUE;
+      foreach ($allowed_blocks as $category => $items) {
+        if (isset($items[0])) {
+          $parts = explode(':', $items[0]);
+          if ($parts[0] == $block_id_parts[0]) {
+            foreach ($items as $item) {
+              if ($item == $block_id) {
+                $has_restrictions = FALSE;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+    if ($has_restrictions) {
+      return t("There is a restriction on %block placement in the %layout %region region for %type content.", [
+        "%block" => end($block_id_parts),
+        "%layout" => $layout_id_to,
+        "%region" => $region_to,
+        "%type" => $bundle,
+      ]);
+    }
+
+    // Default: this block is not restricted.
+    return TRUE;
   }
 
 }

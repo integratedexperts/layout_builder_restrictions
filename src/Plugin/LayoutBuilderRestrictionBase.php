@@ -3,6 +3,7 @@
 namespace Drupal\layout_builder_restrictions\Plugin;
 
 use Drupal\Component\Plugin\PluginBase;
+use Drupal\layout_builder\SectionStorageInterface;
 
 /**
  * Base class for Layout builder restriction plugin plugins.
@@ -24,18 +25,10 @@ abstract class LayoutBuilderRestrictionBase extends PluginBase implements Layout
   }
 
   /**
-   * Determine whether the block being moved is allowed to the destination.
-   *
-   * @param array $context
-   *   At a minimum, the entity, view_mode, layout, and region.
-   *   Depending on the plugin, they may or may not ignore some of
-   *   these contexts.
-   *
-   * @return bool
-   *   Is this block restricted from being placed in the current context?
+   * {@inheritdoc}
    */
-  public function blockMovementRestricted(array $context) {
-    return FALSE;
+  public function blockAllowedinContext(SectionStorageInterface $section_storage, $delta_from, $delta_to, $region_to, $block_uuid, $preceding_block_uuid = NULL) {
+    return TRUE;
   }
 
 }

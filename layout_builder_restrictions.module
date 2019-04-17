@@ -17,7 +17,7 @@ function layout_builder_restrictions_plugin_filter_block__layout_builder_alter(a
   $layout_builder_restrictions_manager = \Drupal::service('plugin.manager.layout_builder_restriction');
   $restriction_definitions = $layout_builder_restrictions_manager->getDefinitions();
   foreach ($restriction_definitions as $restriction_definition) {
-    // @todo: respect ordering of plugins.
+    // @todo: respect ordering of plugins (see #3045266)
     $plugin_instance = $layout_builder_restrictions_manager->createInstance($restriction_definition['id']);
     $definitions = $plugin_instance->alterBlockDefinitions($definitions, $extra);
   }
@@ -48,7 +48,7 @@ function layout_builder_restrictions_plugin_filter_layout__layout_builder_alter(
   $layout_builder_restrictions_manager = \Drupal::service('plugin.manager.layout_builder_restriction');
   $restriction_definitions = $layout_builder_restrictions_manager->getDefinitions();
   foreach ($restriction_definitions as $restriction_definition) {
-    // @todo: respect ordering of plugins.
+    // @todo: respect ordering of plugins (see #3045266)
     $plugin_instance = $layout_builder_restrictions_manager->createInstance($restriction_definition['id']);
     $definitions = $plugin_instance->alterSectionDefinitions($definitions, $extra);
   }
