@@ -15,12 +15,12 @@ use Drupal\layout_builder_restrictions\Form\FormAlter;
  */
 function layout_builder_restrictions_plugin_filter_block__layout_builder_alter(array &$definitions, array $extra) {
   $layout_builder_restrictions_manager = \Drupal::service('plugin.manager.layout_builder_restriction');
-  $restriction_definitions = $layout_builder_restrictions_manager->getDefinitions();
-  foreach ($restriction_definitions as $restriction_definition) {
-    // @todo: respect ordering of plugins (see #3045266)
-    $plugin_instance = $layout_builder_restrictions_manager->createInstance($restriction_definition['id']);
-    $definitions = $plugin_instance->alterBlockDefinitions($definitions, $extra);
+  $restriction_plugins = $layout_builder_restrictions_manager->getSortedPlugins();
+  foreach (array_keys($restriction_plugins) as $id) {
+    $plugin = $layout_builder_restrictions_manager->createInstance($id);
+    $definitions = $plugin->alterBlockDefinitions($definitions, $extra);
   }
+
   // Invoke deprecated API hook for restricting blocks.
   // @todo: remove after 5 September 2019; see #3033213
   $keys = \Drupal::moduleHandler()->invokeAll('layout_builder_restrictions_allowed_block_keys');
@@ -47,11 +47,12 @@ function layout_builder_restrictions_plugin_filter_block__layout_builder_alter(a
 function layout_builder_restrictions_plugin_filter_layout__layout_builder_alter(array &$definitions, array $extra) {
   $layout_builder_restrictions_manager = \Drupal::service('plugin.manager.layout_builder_restriction');
   $restriction_definitions = $layout_builder_restrictions_manager->getDefinitions();
-  foreach ($restriction_definitions as $restriction_definition) {
-    // @todo: respect ordering of plugins (see #3045266)
-    $plugin_instance = $layout_builder_restrictions_manager->createInstance($restriction_definition['id']);
-    $definitions = $plugin_instance->alterSectionDefinitions($definitions, $extra);
+  $restriction_plugins = $layout_builder_restrictions_manager->getSortedPlugins();
+  foreach (array_keys($restriction_plugins) as $id) {
+    $plugin = $layout_builder_restrictions_manager->createInstance($id);
+    $definitions = $plugin->alterSectionDefinitions($definitions, $extra);
   }
+
   // Invoke deprecated API hook for restricting layouts.
   // @todo: remove after 5 September 2019; see #3033213
   $keys = \Drupal::moduleHandler()->invokeAll('layout_builder_restrictions_allowed_layouts');
@@ -74,6 +75,14 @@ function layout_builder_restrictions_plugin_filter_layout__layout_builder_alter(
  * Implements hook_form_FORM_ID_alter() for the entity view display edit form.
  */
 function layout_builder_restrictions_form_entity_view_display_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  // The UI for the EntityViewModeRestriction plugin.
-  \Drupal::classResolver(FormAlter::class)->alterEntityViewDisplayForm($form, $form_state, $form_id);
+  $entity_view_mode_restriction_active = TRUE;
+  if ($config = \Drupal::config('layout_builder_restrictions.plugins')->get('plugin_config')) {
+    // Provide the per view mode restriction UI *unless* the plugin is disabled.
+    if (isset($config['entity_view_mode_restriction']) && $config['entity_view_mode_restriction']['enabled'] == FALSE) {
+      $entity_view_mode_restriction_active = FALSE;
+    }
+  }
+  if ($entity_view_mode_restriction_active) {
+    \Drupal::classResolver(FormAlter::class)->alterEntityViewDisplayForm($form, $form_state, $form_id);
+  }
 }

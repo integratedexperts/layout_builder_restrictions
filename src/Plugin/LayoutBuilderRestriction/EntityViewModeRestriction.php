@@ -95,6 +95,7 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
     $view_display = $storage->load($context);
     $allowed_blocks = $view_display->getThirdPartySetting('layout_builder_restrictions', 'allowed_blocks', []);
     $block_id_parts = explode(':', $block_id);
+    $has_restrictions = FALSE;
     if (!empty($allowed_blocks)) {
       $has_restrictions = TRUE;
       foreach ($allowed_blocks as $category => $items) {

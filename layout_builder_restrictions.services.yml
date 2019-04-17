@@ -6,7 +6,7 @@ services:
       - { name: event_subscriber }
   plugin.manager.layout_builder_restriction:
     class: Drupal\layout_builder_restrictions\Plugin\LayoutBuilderRestrictionManager
-    parent: default_plugin_manager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@config.factory']
   layout_builder_restrictions.route_subscriber:
     class: Drupal\layout_builder_restrictions\Routing\RouteSubscriber
     tags:

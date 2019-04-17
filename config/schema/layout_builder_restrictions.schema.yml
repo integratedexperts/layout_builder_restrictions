@@ -23,3 +23,19 @@ layout_builder_restrictions.third_party_settings:
         sequence:
           type: string
           label: 'Layout ID'
+
+layout_builder_restrictions.plugins:
+  type: config_object
+  label: 'Weighting and active status of Layout Builder Restrictions plugins'
+  mapping:
+    plugin_config:
+      type: sequence
+      sequence:
+        type: mapping
+        mapping:
+          enabled:
+            type: boolean
+            label: 'Is the plugin enabled'
+          weight:
+            type: integer
+            label: 'The relative order of the plugin'
