@@ -2,121 +2,16 @@
 
 namespace Drupal\layout_builder_restrictions\Form;
 
-use Drupal\Core\Block\BlockManagerInterface;
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\DependencyInjection\DependencySerializationTrait;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Layout\LayoutPluginManagerInterface;
-use Drupal\Core\Plugin\Context\ContextHandlerInterface;
-use Drupal\layout_builder\Context\LayoutBuilderContextTrait;
 use Drupal\layout_builder\Entity\LayoutEntityDisplayInterface;
-use Drupal\layout_builder\SectionStorage\SectionStorageManagerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Plugin\Context\EntityContext;
+use Drupal\layout_builder_restrictions\Traits\PluginHelperTrait;
 
 /**
  * Supplement form UI to add setting for which blocks & layouts are available.
  */
-class FormAlter implements ContainerInjectionInterface {
+class FormAlter {
 
-  use DependencySerializationTrait;
-  use LayoutBuilderContextTrait;
-
-  /**
-   * The section storage manager.
-   *
-   * @var \Drupal\layout_builder\SectionStorage\SectionStorageManagerInterface
-   */
-  protected $sectionStorageManager;
-
-  /**
-   * The block manager.
-   *
-   * @var \Drupal\Core\Block\BlockManagerInterface
-   */
-  protected $blockManager;
-
-  /**
-   * The layout manager.
-   *
-   * @var \Drupal\Core\Layout\LayoutPluginManagerInterface
-   */
-  protected $layoutManager;
-
-  /**
-   * The context handler.
-   *
-   * @var \Drupal\Core\Plugin\Context\ContextHandlerInterface
-   */
-  protected $contextHandler;
-
-  /**
-   * Module handler service.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
-   * FormAlter constructor.
-   *
-   * @param \Drupal\layout_builder\SectionStorage\SectionStorageManagerInterface $section_storage_manager
-   *   The section storage manager.
-   * @param \Drupal\Core\Block\BlockManagerInterface $block_manager
-   *   The block manager.
-   * @param \Drupal\Core\Block\LayoutPluginManagerInterface $layout_manager
-   *   The layout plugin manager.
-   * @param \Drupal\Core\Plugin\Context\ContextHandlerInterface $context_handler
-   *   The context handler.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
-   */
-  public function __construct(SectionStorageManagerInterface $section_storage_manager, BlockManagerInterface $block_manager, LayoutPluginManagerInterface $layout_manager, ContextHandlerInterface $context_handler, ModuleHandlerInterface $module_handler) {
-    $this->sectionStorageManager = $section_storage_manager;
-    $this->blockManager = $block_manager;
-    $this->layoutManager = $layout_manager;
-    $this->contextHandler = $context_handler;
-    $this->moduleHandler = $module_handler;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('plugin.manager.layout_builder.section_storage'),
-      $container->get('plugin.manager.block'),
-      $container->get('plugin.manager.core.layout'),
-      $container->get('context.handler'),
-      $container->get('module_handler')
-    );
-  }
-
-  /**
-   * Gets block definitions appropriate for an entity display.
-   *
-   * @param \Drupal\layout_builder\Entity\LayoutEntityDisplayInterface $display
-   *   The entity display being edited.
-   *
-   * @return array[]
-   *   Keys are category names, and values are arrays of which the keys are
-   *   plugin IDs and the values are plugin definitions.
-   */
-  protected function getBlockDefinitions(LayoutEntityDisplayInterface $display) {
-    // Check for 'load' method, which only exists in > 8.7.
-    if (method_exists($this->sectionStorageManager, 'load')) {
-      $section_storage = $this->sectionStorageManager->load('defaults', ['display' => EntityContext::fromEntity($display)]);
-    }
-    else {
-      // BC for < 8.7.
-      $section_storage = $this->sectionStorageManager->loadEmpty('defaults')->setSectionList($display);
-    }
-    // Do not use the plugin filterer here, but still filter by contexts.
-    $definitions = $this->blockManager->getDefinitions();
-    $definitions = $this->contextHandler->filterPluginDefinitionsByContexts($this->getAvailableContexts($section_storage), $definitions);
-    return $this->blockManager->getGroupedDefinitions($definitions);
-  }
+  use PluginHelperTrait;
 
   /**
    * The actual form elements.
@@ -208,7 +103,7 @@ class FormAlter implements ContainerInjectionInterface {
         ],
         '#default_value' => !empty($allowed_layouts) ? "restricted" : "all",
       ];
-      $definitions = $this->layoutManager->getFilteredDefinitions('layout_builder', []);
+      $definitions = $this->getLayoutDefinitions();
       foreach ($definitions as $plugin_id => $definition) {
         $enabled = FALSE;
         if (!empty($allowed_layouts) && in_array($plugin_id, $allowed_layouts)) {
