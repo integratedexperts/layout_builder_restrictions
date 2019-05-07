@@ -14,34 +14,6 @@ trait PluginHelperTrait {
   use LayoutBuilderContextTrait;
 
   /**
-   * The section storage manager.
-   *
-   * @var \Drupal\layout_builder\SectionStorage\SectionStorageManagerInterface
-   */
-  protected $sectionStorageManager;
-
-  /**
-   * The block manager.
-   *
-   * @var \Drupal\Core\Block\BlockManagerInterface
-   */
-  protected $blockManager;
-
-  /**
-   * The layout plugin manager.
-   *
-   * @var \Drupal\Core\Block\LayoutPluginManagerInterface
-   */
-  protected $layoutManager;
-
-  /**
-   * The context handler.
-   *
-   * @var \Drupal\Core\Plugin\Context\ContextHandlerInterface
-   */
-  protected $contextHandler;
-
-  /**
    * Gets block definitions appropriate for an entity display.
    *
    * @param \Drupal\layout_builder\Entity\LayoutEntityDisplayInterface $display
@@ -100,7 +72,7 @@ trait PluginHelperTrait {
   /**
    * Gets the layout plugin manager.
    *
-   * @return \Drupal\Core\Block\LayoutPluginManagerInterface
+   * @return \Drupal\Core\Layout\LayoutPluginManagerInterface
    *   The layout plugin manager.
    */
   private function layoutManager() {
