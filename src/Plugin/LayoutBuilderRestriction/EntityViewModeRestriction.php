@@ -24,9 +24,13 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
     // Respect restrictions on allowed blocks specified by the section storage.
     if (isset($context['section_storage'])) {
       $default = $context['section_storage'] instanceof OverridesSectionStorageInterface ? $context['section_storage']->getDefaultSectionStorage() : $context['section_storage'];
-      $allowed_blocks = $default instanceof ThirdPartySettingsInterface
-        ? $default->getThirdPartySetting('layout_builder_restrictions', 'allowed_blocks', [])
-        : [];
+      if ($default instanceof ThirdPartySettingsInterface) {
+        $third_party_settings = $default->getThirdPartySetting('layout_builder_restrictions', 'entity_view_mode_restriction', []);
+        $allowed_blocks = (isset($third_party_settings['allowed_blocks'])) ? $third_party_settings['allowed_blocks'] : [];
+      }
+      else {
+        $allowed_blocks = [];
+      }
       // Filter blocks from entity-specific SectionStorage (i.e., UI).
       if (!empty($allowed_blocks)) {
         foreach ($definitions as $delta => $definition) {
@@ -52,7 +56,8 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
     if (isset($context['section_storage'])) {
       $default = $context['section_storage'] instanceof OverridesSectionStorageInterface ? $context['section_storage']->getDefaultSectionStorage() : $context['section_storage'];
       if ($default instanceof ThirdPartySettingsInterface) {
-        $allowed_layouts = $default->getThirdPartySetting('layout_builder_restrictions', 'allowed_layouts', []);
+        $third_party_settings = $default->getThirdPartySetting('layout_builder_restrictions', 'entity_view_mode_restriction', []);
+        $allowed_layouts = (isset($third_party_settings['allowed_layouts'])) ? $third_party_settings['allowed_layouts'] : [];
         // Filter blocks from entity-specific SectionStorage (i.e., UI).
         if (!empty($allowed_layouts)) {
           $definitions = array_intersect_key($definitions, array_flip($allowed_layouts));
@@ -93,7 +98,8 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
     $context = $entity_type . "." . $bundle . "." . $view_mode;
     $storage = \Drupal::entityTypeManager()->getStorage('entity_view_display');
     $view_display = $storage->load($context);
-    $allowed_blocks = $view_display->getThirdPartySetting('layout_builder_restrictions', 'allowed_blocks', []);
+    $third_party_settings = $view_display->getThirdPartySetting('layout_builder_restrictions', 'entity_view_mode_restriction', []);
+    $allowed_blocks = (isset($third_party_settings['allowed_blocks'])) ? $third_party_settings['allowed_blocks'] : [];
     $block_id_parts = explode(':', $block_id);
     $has_restrictions = FALSE;
     if (!empty($allowed_blocks)) {

@@ -108,7 +108,8 @@ class FormAlter implements ContainerInjectionInterface {
           ],
         ],
       ];
-      $allowed_blocks = $display->getThirdPartySetting('layout_builder_restrictions', 'allowed_blocks', []);
+      $third_party_settings = $display->getThirdPartySetting('layout_builder_restrictions', 'entity_view_mode_restriction', []);
+      $allowed_blocks = (isset($third_party_settings['allowed_blocks'])) ? $third_party_settings['allowed_blocks'] : [];
       foreach ($this->getBlockDefinitions($display) as $category => $blocks) {
         $category_form = [
           '#type' => 'fieldset',
@@ -155,7 +156,8 @@ class FormAlter implements ContainerInjectionInterface {
         $form['layout']['layout_builder_restrictions']['allowed_blocks'][$category] = $category_form;
       }
       // Layout settings.
-      $allowed_layouts = $display->getThirdPartySetting('layout_builder_restrictions', 'allowed_layouts', []);
+      $third_party_settings = $display->getThirdPartySetting('layout_builder_restrictions', 'entity_view_mode_restriction', []);
+      $allowed_layouts = (isset($third_party_settings['allowed_layouts'])) ? $third_party_settings['allowed_layouts'] : [];
       $layout_form = [
         '#type' => 'details',
         '#title' => t('Layouts available for sections'),
@@ -227,7 +229,9 @@ class FormAlter implements ContainerInjectionInterface {
           }
         }
       }
-      $display->setThirdPartySetting('layout_builder_restrictions', 'allowed_blocks', $allowed_blocks);
+      $third_party_settings = $display->getThirdPartySetting('layout_builder_restrictions', 'entity_view_mode_restriction');
+      $third_party_settings['allowed_blocks'] = $allowed_blocks;
+      $display->setThirdPartySetting('layout_builder_restrictions', 'entity_view_mode_restriction', $third_party_settings);
     }
 
     // Set allowed layouts.
@@ -244,7 +248,9 @@ class FormAlter implements ContainerInjectionInterface {
         'layouts',
       ])));
     }
-    $display->setThirdPartySetting('layout_builder_restrictions', 'allowed_layouts', $allowed_layouts);
+    $third_party_settings = $display->getThirdPartySetting('layout_builder_restrictions', 'entity_view_mode_restriction');
+    $third_party_settings['allowed_layouts'] = $allowed_layouts;
+    $display->setThirdPartySetting('layout_builder_restrictions', 'entity_view_mode_restriction', $third_party_settings);
   }
 
 }
