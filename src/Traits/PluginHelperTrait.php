@@ -36,7 +36,29 @@ trait PluginHelperTrait {
     // Do not use the plugin filterer here, but still filter by contexts.
     $definitions = $this->blockManager()->getDefinitions();
     $definitions = $this->contextHandler()->filterPluginDefinitionsByContexts($this->getAvailableContexts($section_storage), $definitions);
-    return $this->blockManager()->getGroupedDefinitions($definitions);
+    $definitions = $this->blockManager()->getGroupedDefinitions($definitions);
+
+    // Move 'Custom' blocks to 'Custom blocks' namespace.
+    if (isset($definitions['Custom'])) {
+      $definitions['Custom blocks'] = $definitions['Custom'];
+      unset($definitions['Custom']);
+    }
+
+    // Generate a list of custom block types under the
+    // 'Custom block types' namespace.
+    $custom_block_bundles = $this->entityTypeBundleInfo()->getBundleInfo('block_content');
+    if ($custom_block_bundles) {
+      $definitions['Custom block types'] = [];
+      foreach ($custom_block_bundles as $machine_name => $value) {
+        $definitions['Custom block types'][$machine_name] = [
+          'admin_label' => $value['label'],
+          'category' => t('Custom block types'),
+        ];
+      }
+    }
+    ksort($definitions);
+
+    return $definitions;
   }
 
   /**
@@ -66,7 +88,7 @@ trait PluginHelperTrait {
    *   The block manager.
    */
   private function blockManager() {
-    return $this->blockManager ?: \Drupal::service('plugin.manager.block');
+    return $this->blockManager ?? \Drupal::service('plugin.manager.block');
   }
 
   /**
@@ -76,7 +98,7 @@ trait PluginHelperTrait {
    *   The layout plugin manager.
    */
   private function layoutManager() {
-    return $this->layoutManager ?: \Drupal::service('plugin.manager.core.layout');
+    return $this->layoutManager ?? \Drupal::service('plugin.manager.core.layout');
   }
 
   /**
@@ -86,7 +108,17 @@ trait PluginHelperTrait {
    *   The context handler.
    */
   private function contextHandler() {
-    return $this->contextHandler ?: \Drupal::service('context.handler');
+    return $this->contextHandler ?? \Drupal::service('context.handler');
+  }
+
+  /**
+   * Gets the entity bundle interface.
+   *
+   * @return \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   *   An interface for an entity type bundle info.
+   */
+  private function entityTypeBundleInfo() {
+    return $this->entityTypeBundleInfo ?? \Drupal::service('entity_type.bundle.info');
   }
 
 }

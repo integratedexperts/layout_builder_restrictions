@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\layout_builder_restrictions\FunctionalJavascript;
 
+use Drupal\block_content\Entity\BlockContent;
+use Drupal\block_content\Entity\BlockContentType;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 
 /**
@@ -20,6 +22,7 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
     'layout_builder_restrictions',
     'node',
     'field_ui',
+    'block_content',
   ];
 
   /**
@@ -37,16 +40,50 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
       'administer node display',
       'administer node fields',
       'configure any layout',
+      'create and edit custom blocks',
     ]));
-
   }
 
   /**
    * Verify that the UI can restrict blocks in Layout Builder settings tray.
    */
   public function testBlockRestriction() {
+    // Create 2 custom block types, with 3 block instances.
+    $bundle = BlockContentType::create([
+      'id' => 'basic',
+      'label' => 'Basic',
+    ]);
+    $bundle->save();
+    $bundle = BlockContentType::create([
+      'id' => 'alternate',
+      'label' => 'Alternate',
+    ]);
+    $bundle->save();
+    block_content_add_body_field($bundle->id());
+    $blocks = [
+      'Basic Block 1' => 'basic',
+      'Basic Block 2' => 'basic',
+      'Alternate Block 1' => 'alternate',
+    ];
+    foreach ($blocks as $info => $type) {
+      $block = BlockContent::create([
+        'info' => $info,
+        'type' => $type,
+        'body' => [
+          [
+            'value' => 'This is the block content',
+            'format' => filter_default_format(),
+          ],
+        ],
+      ]);
+      $block->save();
+      $blocks[$info] = $block->uuid();
+    }
+
+    $this->getSession()->resizeWindow(1200, 2000);
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
+
     $field_ui_prefix = 'admin/structure/types/manage/bundle_with_section_field';
     // From the manage display page, go to manage the layout.
     $this->drupalGet("$field_ui_prefix/display/default");
@@ -58,17 +95,29 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
     $this->clickLink('Manage layout');
     $this->clickLink('Add Block');
     $assert_session->assertWaitOnAjaxRequest();
-    // Establish that initially, the body field is available.
+    // Initially, the body field is available.
     $assert_session->linkExists('Body');
+    // Initially, custom blocks are available.
+    $assert_session->linkExists('Basic Block 1');
+    $assert_session->linkExists('Basic Block 2');
+    $assert_session->linkExists('Alternate Block 1');
+    // Initially, all inline block types are allowed.
+    $this->clickLink('Create custom block');
+    $assert_session->linkExists('Basic');
+    $assert_session->linkExists('Alternate');
 
-    // Restrict all 'Content' fields from options.
+    // Impose block-type-wide restrictions.
     $this->drupalGet("$field_ui_prefix/display/default");
     $element = $page->find('xpath', '//*[@id="edit-layout-layout-builder-restrictions-allowed-blocks"]/summary');
     $element->click();
     $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-all"]');
     $assert_session->checkboxChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-all');
     $assert_session->checkboxNotChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-restricted');
+    // Restrict all 'Content' fields from options.
     $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-restricted"]');
+    $element->click();
+    // Restrict all Custom block types from options.
+    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-custom-block-types-restriction-restricted"]');
     $element->click();
     $page->pressButton('Save');
 
@@ -82,13 +131,23 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
     $this->clickLink('Add Block');
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->linkNotExists('Body');
+    $assert_session->linkNotExists('Basic Block 1');
+    $assert_session->linkNotExists('Basic Block 2');
+    $assert_session->linkNotExists('Alternate Block 1');
+    // No inline block types are allowed.
+    $this->clickLink('Create custom block');
+    $assert_session->linkNotExists('Basic');
+    $assert_session->linkNotExists('Alternate');
 
-    // Allow only 'body' field as an option.
+    // Whitelist some blocks / block types.
     $this->drupalGet("$field_ui_prefix/display/default");
     $element = $page->find('xpath', '//*[@id="edit-layout-layout-builder-restrictions-allowed-blocks"]/summary');
     $element->click();
     $assert_session->checkboxChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-restricted');
+    // Allow only 'body' field as an option.
     $page->checkField('layout_builder_restrictions[allowed_blocks][Content fields][field_block:node:bundle_with_section_field:body]');
+    // Whitelist all "basic" block types.
+    $page->checkField('layout_builder_restrictions[allowed_blocks][Custom block types][basic]');
     $page->pressButton('Save');
 
     $this->drupalGet("$field_ui_prefix/display/default");
@@ -103,6 +162,36 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
     // ... but other 'content' fields aren't.
     $assert_session->linkNotExists('Promoted to front page');
     $assert_session->linkNotExists('Sticky at top of lists');
+    // "Basic" blocks are allowed.
+    $assert_session->linkExists('Basic Block 1');
+    $assert_session->linkExists('Basic Block 2');
+    // ... but "alternate" blocks are disallowed.
+    $assert_session->linkNotExists('Alternate Block 1');
+    // Only the basic inline block type is allowed.
+    $this->clickLink('Create custom block');
+    $assert_session->linkExists('Basic');
+    $assert_session->linkNotExists('Alternate');
+
+    // Custom block instances take precedence over custom block type setting.
+    $this->drupalGet("$field_ui_prefix/display/default");
+    $element = $page->find('xpath', '//*[@id="edit-layout-layout-builder-restrictions-allowed-blocks"]/summary');
+    $element->click();
+    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-custom-blocks-restriction-restricted"]');
+    $element->click();
+    // Allow Alternate Block 1.
+    $page->checkField('layout_builder_restrictions[allowed_blocks][Custom blocks][block_content:' . $blocks['Alternate Block 1'] . ']');
+    // Allow Basic Block 1.
+    $page->checkField('layout_builder_restrictions[allowed_blocks][Custom blocks][block_content:' . $blocks['Basic Block 1'] . ']');
+    $page->pressButton('Save');
+    $this->drupalGet("$field_ui_prefix/display/default");
+    $assert_session->linkExists('Manage layout');
+    $this->clickLink('Manage layout');
+    $assert_session->addressEquals("$field_ui_prefix/display/default/layout");
+    $this->clickLink('Add Block');
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->linkExists('Basic Block 1');
+    $assert_session->linkNotExists('Basic Block 2');
+    $assert_session->linkExists('Alternate Block 1');
   }
 
   /**

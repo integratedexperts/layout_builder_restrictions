@@ -27,6 +27,12 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
       if ($default instanceof ThirdPartySettingsInterface) {
         $third_party_settings = $default->getThirdPartySetting('layout_builder_restrictions', 'entity_view_mode_restriction', []);
         $allowed_blocks = (isset($third_party_settings['allowed_blocks'])) ? $third_party_settings['allowed_blocks'] : [];
+        // Generate inline-block restrictions based on block type restrictions.
+        if (isset($allowed_blocks['Custom block types'])) {
+          foreach ($allowed_blocks['Custom block types'] as $delta => $id) {
+            $allowed_blocks['Inline blocks'][$delta] = "inline_block:" . $id;
+          }
+        }
       }
       else {
         $allowed_blocks = [];
@@ -34,12 +40,29 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
       // Filter blocks from entity-specific SectionStorage (i.e., UI).
       if (!empty($allowed_blocks)) {
         foreach ($definitions as $delta => $definition) {
+          $original_delta = $delta;
           $category = (string) $definition['category'];
+          // Custom blocks get special treatment.
+          if ($category == 'Custom') {
+            // 'Custom block types' are disregarded if 'Custom blocks'
+            // restrictions are enabled.
+            if (isset($allowed_blocks['Custom blocks'])) {
+              $category = 'Custom blocks';
+            }
+            else {
+              $category = 'Custom block types';
+              $delta_exploded = explode(':', $delta);
+              $uuid = $delta_exploded[1];
+              $block = \Drupal::service('entity.repository')->loadEntityByUuid('block_content', $uuid);
+              $delta = $block->bundle();
+            }
+          }
+
           if (in_array($category, array_keys($allowed_blocks))) {
             // This category has restrictions.
             if (!in_array($delta, $allowed_blocks[$category])) {
               // The current block is not in the allowed list for this category.
-              unset($definitions[$delta]);
+              unset($definitions[$original_delta]);
             }
           }
         }

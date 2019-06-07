@@ -50,13 +50,6 @@ class FormAlter implements ContainerInjectionInterface {
   protected $contextHandler;
 
   /**
-   * Module handler service.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
    * FormAlter constructor.
    *
    * @param \Drupal\layout_builder\SectionStorage\SectionStorageManagerInterface $section_storage_manager
@@ -149,6 +142,17 @@ class FormAlter implements ContainerInjectionInterface {
             '#states' => [
               'invisible' => [
                 ':input[name="layout_builder_restrictions[allowed_blocks][' . $category . '][restriction]"]' => ['value' => "all"],
+              ],
+            ],
+          ];
+        }
+        if ($category == 'Custom blocks' || $category == 'Custom block types') {
+          $category_form['description'] = [
+            '#type' => 'container',
+            '#children' => t('<p>In the event both <em>Custom Block Types</em> and <em>Custom Blocks</em> restrictions are enabled, <em>Custom Block Types</em> restrictions are disregarded.</p>'),
+            '#states' => [
+              'visible' => [
+                ':input[name="layout_builder_restrictions[allowed_blocks][' . $category . '][restriction]"]' => ['value' => "restricted"],
               ],
             ],
           ];
