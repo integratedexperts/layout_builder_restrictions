@@ -6,6 +6,7 @@ use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
 use Drupal\layout_builder_restrictions\Plugin\LayoutBuilderRestrictionBase;
 use Drupal\layout_builder\OverridesSectionStorageInterface;
 use Drupal\layout_builder\SectionStorageInterface;
+use Drupal\layout_builder_restrictions\Traits\PluginHelperTrait;
 
 /**
  * EntityViewModeRestriction Plugin.
@@ -16,6 +17,8 @@ use Drupal\layout_builder\SectionStorageInterface;
  * )
  */
 class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
+
+  use PluginHelperTrait;
 
   /**
    * {@inheritdoc}
@@ -94,6 +97,7 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
    * {@inheritdoc}
    */
   public function blockAllowedinContext(SectionStorageInterface $section_storage, $delta_from, $delta_to, $region_to, $block_uuid, $preceding_block_uuid = NULL) {
+    $has_restrictions = FALSE;
     $contexts = $section_storage->getContexts();
     if ($section_storage instanceof OverridesSectionStorageInterface) {
       $entity = $contexts['entity']->getContextValue();
@@ -118,36 +122,67 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
     // Get block information.
     $component = $section_from->getComponent($block_uuid)->toArray();
     $block_id = $component['configuration']['id'];
+    $block_id_parts = explode(':', $block_id);
     $context = $entity_type . "." . $bundle . "." . $view_mode;
     $storage = \Drupal::entityTypeManager()->getStorage('entity_view_display');
     $view_display = $storage->load($context);
     $third_party_settings = $view_display->getThirdPartySetting('layout_builder_restrictions', 'entity_view_mode_restriction', []);
-    $allowed_blocks = (isset($third_party_settings['allowed_blocks'])) ? $third_party_settings['allowed_blocks'] : [];
-    $block_id_parts = explode(':', $block_id);
-    $has_restrictions = FALSE;
-    if (!empty($allowed_blocks)) {
-      $has_restrictions = TRUE;
-      foreach ($allowed_blocks as $category => $items) {
-        if (isset($items[0])) {
-          $parts = explode(':', $items[0]);
-          if ($parts[0] == $block_id_parts[0]) {
-            foreach ($items as $item) {
-              if ($item == $block_id) {
-                $has_restrictions = FALSE;
-                break;
-              }
+
+    // Load the plugin definition.
+    if ($definition = $this->blockManager()->getDefinition($block_id)) {
+      $category = $definition['category']->__tostring();
+      if ($category == "Custom") {
+        // Rename to match Layout Builder Restrictions naming.
+        $category = "Custom blocks";
+      }
+      $allowed_blocks = (isset($third_party_settings['allowed_blocks'])) ? $third_party_settings['allowed_blocks'] : [];
+
+      // If the block category isn't present, there aren't restrictions.
+      if (!isset($allowed_blocks[$category])) {
+        $has_restrictions = FALSE;
+      }
+
+      if (!empty($allowed_blocks)) {
+        // There ARE restrictions. Start as restricted.
+        $has_restrictions = TRUE;
+        if (!isset($allowed_blocks[$category]) && $category != "Custom blocks") {
+          // No restrictions have been placed on this category.
+          $has_restrictions = FALSE;
+        }
+        else {
+          // Some type of restriction has been placed.
+          foreach ($allowed_blocks[$category] as $item) {
+            if ($item == $block_id) {
+              $has_restrictions = FALSE;
+              break;
             }
           }
         }
+        // Edge case: Restrict by block type if no custom block restrictions.
+        if ($category == 'Custom blocks' && !isset($allowed_blocks['Custom blocks'])) {
+          $has_restrictions = FALSE;
+          $block = \Drupal::service('entity.repository')->loadEntityByUuid('block_content', end($block_id_parts));
+          $block_bundle = $block->bundle();
+          if (!empty($allowed_blocks['Custom block types']) && in_array($block_bundle, $allowed_blocks['Custom block types'])) {
+            // There are block type restrictions AND
+            // this block type has been whitelisted.
+            $has_restrictions = FALSE;
+          }
+          elseif (isset($allowed_blocks['Custom block types'])) {
+            // There are block type restrictions BUT
+            // this block type has NOT been whitelisted.
+            $has_restrictions = TRUE;
+          }
+        }
       }
-    }
-    if ($has_restrictions) {
-      return t("There is a restriction on %block placement in the %layout %region region for %type content.", [
-        "%block" => end($block_id_parts),
-        "%layout" => $layout_id_to,
-        "%region" => $region_to,
-        "%type" => $bundle,
-      ]);
+      if ($has_restrictions) {
+        return t("There is a restriction on %block placement in the %layout %region region for %type content.", [
+          "%block" => $definition['admin_label'],
+          "%layout" => $layout_id_to,
+          "%region" => $region_to,
+          "%type" => $bundle,
+        ]);
+      }
     }
 
     // Default: this block is not restricted.
