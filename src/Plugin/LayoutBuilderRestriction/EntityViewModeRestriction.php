@@ -41,6 +41,7 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
         $allowed_blocks = [];
       }
       // Filter blocks from entity-specific SectionStorage (i.e., UI).
+      $content_block_types_by_uuid = self::getBlockTypeByUuid();
       if (!empty($allowed_blocks)) {
         foreach ($definitions as $delta => $definition) {
           $original_delta = $delta;
@@ -56,8 +57,7 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
               $category = 'Custom block types';
               $delta_exploded = explode(':', $delta);
               $uuid = $delta_exploded[1];
-              $block = \Drupal::service('entity.repository')->loadEntityByUuid('block_content', $uuid);
-              $delta = $block->bundle();
+              $delta = $content_block_types_by_uuid[$uuid];
             }
           }
 
@@ -161,8 +161,8 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
         // Edge case: Restrict by block type if no custom block restrictions.
         if ($category == 'Custom blocks' && !isset($allowed_blocks['Custom blocks'])) {
           $has_restrictions = FALSE;
-          $block = \Drupal::service('entity.repository')->loadEntityByUuid('block_content', end($block_id_parts));
-          $block_bundle = $block->bundle();
+          $content_block_types_by_uuid = self::getBlockTypeByUuid();
+          $block_bundle = $content_block_types_by_uuid[end($block_id_parts)];
           if (!empty($allowed_blocks['Custom block types']) && in_array($block_bundle, $allowed_blocks['Custom block types'])) {
             // There are block type restrictions AND
             // this block type has been whitelisted.
@@ -187,6 +187,20 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
 
     // Default: this block is not restricted.
     return TRUE;
+  }
+
+  /**
+   * Helper function to retrieve uuid->type keyed block array.
+   *
+   * @return str[]
+   *   A key-value array of uuid-block type.
+   */
+  private static function getBlockTypeByUuid() {
+    // Pre-load all reusable blocks by UUID to retrieve block type.
+    $query = \Drupal::database()->select('block_content', 'b')
+      ->fields('b', ['uuid', 'type']);
+    $results = $query->execute();
+    return $results->fetchAllKeyed(0, 1);
   }
 
 }
