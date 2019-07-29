@@ -93,7 +93,7 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
     $page->pressButton('Save');
     $assert_session->linkExists('Manage layout');
     $this->clickLink('Manage layout');
-    $this->clickLink('Add Block');
+    $this->clickLink('Add block');
     $assert_session->assertWaitOnAjaxRequest();
     // Initially, the body field is available.
     $assert_session->linkExists('Body');
@@ -128,7 +128,7 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
     $assert_session->addressEquals("$field_ui_prefix/display/default/layout");
     // The "body" field is no longer present.
     $assert_session->elementExists('css', '.field--name-body');
-    $this->clickLink('Add Block');
+    $this->clickLink('Add block');
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->linkNotExists('Body');
     $assert_session->linkNotExists('Basic Block 1');
@@ -156,7 +156,7 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
     $assert_session->addressEquals("$field_ui_prefix/display/default/layout");
     // The "body" field is once again present.
     $assert_session->elementExists('css', '.field--name-body');
-    $this->clickLink('Add Block');
+    $this->clickLink('Add block');
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->linkExists('Body');
     // ... but other 'content' fields aren't.
@@ -187,7 +187,7 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
     $assert_session->linkExists('Manage layout');
     $this->clickLink('Manage layout');
     $assert_session->addressEquals("$field_ui_prefix/display/default/layout");
-    $this->clickLink('Add Block');
+    $this->clickLink('Add block');
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->linkExists('Basic Block 1');
     $assert_session->linkNotExists('Basic Block 2');
@@ -211,7 +211,7 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
     $assert_session->addressEquals("$field_ui_prefix/display/default/layout");
     // Baseline: 'One column' & 'Two column' layouts are available.
     $assert_session->elementExists('css', '.field--name-body');
-    $this->clickLink('Add Section');
+    $this->clickLink('Add section');
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->linkExists('One column');
     $assert_session->linkExists('Two column');
@@ -234,7 +234,7 @@ class LayoutBuilderRestrictionsTest extends WebDriverTestBase {
     $assert_session->linkExists('Manage layout');
     $this->clickLink('Manage layout');
     $assert_session->addressEquals("$field_ui_prefix/display/default/layout");
-    $this->clickLink('Add Section');
+    $this->clickLink('Add section');
     $assert_session->assertWaitOnAjaxRequest();
     $assert_session->linkNotExists('One column');
     $assert_session->linkExists('Two column');

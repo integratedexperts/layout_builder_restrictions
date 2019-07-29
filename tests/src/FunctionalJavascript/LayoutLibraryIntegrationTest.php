@@ -52,11 +52,9 @@ class LayoutLibraryIntegrationTest extends WebDriverTestBase {
     $this->assertNotEmpty($assert_session->waitForText('Machine name: charlie'));
     $page->selectFieldOption('Entity Type', 'node:alpha');
     $page->pressButton('Save');
-    $page->clickLink('Add Section');
+    $page->clickLink('Add section');
     $this->assertNotEmpty($assert_session->waitForElementVisible('css', '.layout-selection'));
     $page->clickLink('One column');
-    $assert_session->assertWaitOnAjaxRequest();
-    $page->clickLink('Add Block');
     $assert_session->assertWaitOnAjaxRequest();
   }
 
