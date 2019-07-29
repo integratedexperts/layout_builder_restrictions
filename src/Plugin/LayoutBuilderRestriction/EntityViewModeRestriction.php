@@ -130,7 +130,12 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
 
     // Load the plugin definition.
     if ($definition = $this->blockManager()->getDefinition($block_id)) {
-      $category = $definition['category']->__tostring();
+      if (is_string($definition['category'])) {
+        $category = $definition['category'];
+      }
+      else {
+        $category = $definition['category']->__tostring();
+      }
       if ($category == "Custom") {
         // Rename to match Layout Builder Restrictions naming.
         $category = "Custom blocks";
