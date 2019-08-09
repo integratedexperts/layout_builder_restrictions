@@ -3,10 +3,13 @@
 namespace Drupal\layout_builder_restrictions\Plugin\LayoutBuilderRestriction;
 
 use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Database\Connection;
 use Drupal\layout_builder_restrictions\Plugin\LayoutBuilderRestrictionBase;
 use Drupal\layout_builder\OverridesSectionStorageInterface;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\layout_builder_restrictions\Traits\PluginHelperTrait;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * EntityViewModeRestriction Plugin.
@@ -19,6 +22,55 @@ use Drupal\layout_builder_restrictions\Traits\PluginHelperTrait;
 class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
 
   use PluginHelperTrait;
+
+  /**
+   * Module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
+   * Database connection service.
+   *
+   * @var Drupal\Core\Database\Connection
+   */
+  protected $database;
+
+  /**
+   * Constructs a Drupal\Component\Plugin\PluginBase object.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
+   * @param Drupal\Core\Database\Connection $connection
+   *   The database connection.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ModuleHandlerInterface $module_handler, Connection $connection) {
+    $this->configuration = $configuration;
+    $this->pluginId = $plugin_id;
+    $this->pluginDefinition = $plugin_definition;
+    $this->moduleHandler = $module_handler;
+    $this->database = $connection;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('module_handler'),
+      $container->get('database')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -41,7 +93,7 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
         $allowed_blocks = [];
       }
       // Filter blocks from entity-specific SectionStorage (i.e., UI).
-      $content_block_types_by_uuid = self::getBlockTypeByUuid();
+      $content_block_types_by_uuid = $this->getBlockTypeByUuid();
       if (!empty($allowed_blocks)) {
         foreach ($definitions as $delta => $definition) {
           $original_delta = $delta;
@@ -166,7 +218,7 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
         // Edge case: Restrict by block type if no custom block restrictions.
         if ($category == 'Custom blocks' && !isset($allowed_blocks['Custom blocks'])) {
           $has_restrictions = FALSE;
-          $content_block_types_by_uuid = self::getBlockTypeByUuid();
+          $content_block_types_by_uuid = $this->getBlockTypeByUuid();
           $block_bundle = $content_block_types_by_uuid[end($block_id_parts)];
           if (!empty($allowed_blocks['Custom block types']) && in_array($block_bundle, $allowed_blocks['Custom block types'])) {
             // There are block type restrictions AND
@@ -200,12 +252,15 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
    * @return str[]
    *   A key-value array of uuid-block type.
    */
-  private static function getBlockTypeByUuid() {
-    // Pre-load all reusable blocks by UUID to retrieve block type.
-    $query = \Drupal::database()->select('block_content', 'b')
-      ->fields('b', ['uuid', 'type']);
-    $results = $query->execute();
-    return $results->fetchAllKeyed(0, 1);
+  private function getBlockTypeByUuid() {
+    if ($this->moduleHandler->moduleExists('block_content')) {
+      // Pre-load all reusable blocks by UUID to retrieve block type.
+      $query = $this->database->select('block_content', 'b')
+        ->fields('b', ['uuid', 'type']);
+      $results = $query->execute();
+      return $results->fetchAllKeyed(0, 1);
+    }
+    return [];
   }
 
 }

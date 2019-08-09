@@ -4,11 +4,12 @@ namespace Drupal\layout_builder_restrictions\Plugin;
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\layout_builder\SectionStorageInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 
 /**
  * Base class for Layout builder restriction plugin plugins.
  */
-abstract class LayoutBuilderRestrictionBase extends PluginBase implements LayoutBuilderRestrictionInterface {
+abstract class LayoutBuilderRestrictionBase extends PluginBase implements LayoutBuilderRestrictionInterface, ContainerFactoryPluginInterface {
 
   /**
    * Alter the block definitions.
