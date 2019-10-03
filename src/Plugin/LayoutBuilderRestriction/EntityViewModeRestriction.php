@@ -157,11 +157,18 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
       $entity_type = $entity->getEntityTypeId();
       $bundle = $entity->bundle();
     }
-    else {
+    elseif (isset($contexts['display'])) {
       $entity = $contexts['display']->getContextValue();
       $view_mode = $entity->getMode();
       $bundle = $entity->getTargetBundle();
       $entity_type = $entity->getTargetEntityTypeId();
+    }
+    elseif (isset($contexts['layout'])) {
+      $entity = $contexts['layout']->getContextValue();
+      // Layout entities do not define view_modes.
+      $view_mode = 'default';
+      $bundle = $entity->getTargetBundle();
+      $entity_type = $entity->getTargetEntityType();
     }
     // Get "from" section and layout id. (not needed?)
     $section_from = $section_storage->getSection($delta_from);
