@@ -26,7 +26,7 @@ class ChooseBlockController extends ChooseBlockControllerCore {
       $plugin = $layout_builder_restrictions_manager->createInstance($id);
       $allowed_inline_blocks = $plugin->inlineBlocksAllowedinContext($section_storage, $delta, $region);
 
-      // If no inline blocks are allowed, then remove the "Create custom block" link.
+      // If no inline blocks are allowed, remove the "Create custom block" link.
       if (empty($allowed_inline_blocks)) {
         unset($build['add_block']);
       }
