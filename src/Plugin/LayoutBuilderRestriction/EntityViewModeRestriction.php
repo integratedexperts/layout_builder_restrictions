@@ -82,12 +82,6 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
       if ($default instanceof ThirdPartySettingsInterface) {
         $third_party_settings = $default->getThirdPartySetting('layout_builder_restrictions', 'entity_view_mode_restriction', []);
         $allowed_blocks = (isset($third_party_settings['allowed_blocks'])) ? $third_party_settings['allowed_blocks'] : [];
-        // Generate inline-block restrictions based on block type restrictions.
-        if (isset($allowed_blocks['Custom block types'])) {
-          foreach ($allowed_blocks['Custom block types'] as $delta => $id) {
-            $allowed_blocks['Inline blocks'][$delta] = "inline_block:" . $id;
-          }
-        }
       }
       else {
         $allowed_blocks = [];
@@ -150,26 +144,12 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
    */
   public function blockAllowedinContext(SectionStorageInterface $section_storage, $delta_from, $delta_to, $region_to, $block_uuid, $preceding_block_uuid = NULL) {
     $has_restrictions = FALSE;
-    $contexts = $section_storage->getContexts();
-    if ($section_storage instanceof OverridesSectionStorageInterface) {
-      $entity = $contexts['entity']->getContextValue();
-      $view_mode = $contexts['view_mode']->getContextValue();
-      $entity_type = $entity->getEntityTypeId();
-      $bundle = $entity->bundle();
-    }
-    elseif (isset($contexts['display'])) {
-      $entity = $contexts['display']->getContextValue();
-      $view_mode = $entity->getMode();
-      $bundle = $entity->getTargetBundle();
-      $entity_type = $entity->getTargetEntityTypeId();
-    }
-    elseif (isset($contexts['layout'])) {
-      $entity = $contexts['layout']->getContextValue();
-      // Layout entities do not define view_modes.
-      $view_mode = 'default';
-      $bundle = $entity->getTargetBundle();
-      $entity_type = $entity->getTargetEntityType();
-    }
+
+    $view_display = $this->getValuefromSectionStorage([$section_storage], 'view_display');
+    $third_party_settings = $view_display->getThirdPartySetting('layout_builder_restrictions', 'entity_view_mode_restriction', []);
+    $allowed_blocks = (isset($third_party_settings['allowed_blocks'])) ? $third_party_settings['allowed_blocks'] : [];
+    $bundle = $this->getValuefromSectionStorage([$section_storage], 'bundle');
+
     // Get "from" section and layout id. (not needed?)
     $section_from = $section_storage->getSection($delta_from);
     $layout_id_from = $section_from->getLayoutId();
@@ -182,10 +162,6 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
     $component = $section_from->getComponent($block_uuid)->toArray();
     $block_id = $component['configuration']['id'];
     $block_id_parts = explode(':', $block_id);
-    $context = $entity_type . "." . $bundle . "." . $view_mode;
-    $storage = \Drupal::entityTypeManager()->getStorage('entity_view_display');
-    $view_display = $storage->load($context);
-    $third_party_settings = $view_display->getThirdPartySetting('layout_builder_restrictions', 'entity_view_mode_restriction', []);
 
     // Load the plugin definition.
     if ($definition = $this->blockManager()->getDefinition($block_id)) {
@@ -251,6 +227,24 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
 
     // Default: this block is not restricted.
     return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function inlineBlocksAllowedinContext(SectionStorageInterface $section_storage, $delta, $region) {
+    $view_display = $this->getValuefromSectionStorage([$section_storage], 'view_display');
+    $third_party_settings = $view_display->getThirdPartySetting('layout_builder_restrictions', 'entity_view_mode_restriction', []);
+    $allowed_blocks = (isset($third_party_settings['allowed_blocks'])) ? $third_party_settings['allowed_blocks'] : [];
+
+    // Check if allowed inline blocks are defined in config.
+    if (isset($allowed_blocks['Inline blocks'])) {
+      return $allowed_blocks['Inline blocks'];
+    }
+    // If not, then allow all inline blocks.
+    else {
+      return $this->getInlineBlockPlugins();
+    }
   }
 
   /**
