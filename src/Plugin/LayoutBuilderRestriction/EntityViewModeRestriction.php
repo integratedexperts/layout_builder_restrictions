@@ -93,7 +93,7 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
           $original_delta = $delta;
           $category = (string) $definition['category'];
           // Custom blocks get special treatment.
-          if ($category == 'Custom') {
+          if ($definition['provider'] == 'block_content') {
             // 'Custom block types' are disregarded if 'Custom blocks'
             // restrictions are enabled.
             if (isset($allowed_blocks['Custom blocks'])) {

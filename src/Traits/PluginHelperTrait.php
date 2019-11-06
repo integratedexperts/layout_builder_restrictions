@@ -36,30 +36,49 @@ trait PluginHelperTrait {
     }
     // Do not use the plugin filterer here, but still filter by contexts.
     $definitions = $this->blockManager()->getDefinitions();
-    $definitions = $this->contextHandler()->filterPluginDefinitionsByContexts($this->getAvailableContexts($section_storage), $definitions);
-    $definitions = $this->blockManager()->getGroupedDefinitions($definitions);
 
-    // Move 'Custom' blocks to 'Custom blocks' namespace.
-    if (isset($definitions['Custom'])) {
-      $definitions['Custom blocks'] = $definitions['Custom'];
-      unset($definitions['Custom']);
+    // Create a list of block_content IDs for later filtering.
+    $custom_blocks = [];
+    foreach ($definitions as $key => $definition) {
+      if ($definition['provider'] == 'block_content') {
+        $custom_blocks[] = $key;
+      }
     }
+
+    // Allow filtering of available blocks by other parts of the system.
+    $definitions = $this->contextHandler()->filterPluginDefinitionsByContexts($this->getAvailableContexts($section_storage), $definitions);
+    $grouped_definitions = $this->blockManager()->getGroupedDefinitions($definitions);
+
+    // Create a new category of block_content blocks that meet the context.
+    foreach ($grouped_definitions as $category => $definitions) {
+      foreach ($definitions as $key => $definition) {
+        if (in_array($key, $custom_blocks)) {
+          $grouped_definitions['Custom blocks'][$key] = $definition;
+          // Remove this block_content from its previous category so
+          // that it is defined only in one place.
+          unset($grouped_definitions[$category][$key]);
+        }
+      }
+    }
+    // Do not use the 'Custom' group category: it is now redundant, and
+    // it is less accurate than relying on block_content.
+    unset($grouped_definitions['Custom']);
 
     // Generate a list of custom block types under the
     // 'Custom block types' namespace.
     $custom_block_bundles = $this->entityTypeBundleInfo()->getBundleInfo('block_content');
     if ($custom_block_bundles) {
-      $definitions['Custom block types'] = [];
+      $grouped_definitions['Custom block types'] = [];
       foreach ($custom_block_bundles as $machine_name => $value) {
-        $definitions['Custom block types'][$machine_name] = [
+        $grouped_definitions['Custom block types'][$machine_name] = [
           'admin_label' => $value['label'],
           'category' => t('Custom block types'),
         ];
       }
     }
-    ksort($definitions);
+    ksort($grouped_definitions);
 
-    return $definitions;
+    return $grouped_definitions;
   }
 
   /**
