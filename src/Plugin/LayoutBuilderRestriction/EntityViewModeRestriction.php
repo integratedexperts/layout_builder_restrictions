@@ -175,7 +175,6 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
         // Rename to match Layout Builder Restrictions naming.
         $category = "Custom blocks";
       }
-      $allowed_blocks = (isset($third_party_settings['allowed_blocks'])) ? $third_party_settings['allowed_blocks'] : [];
 
       // If the block category isn't present, there aren't restrictions.
       if (!isset($allowed_blocks[$category])) {
