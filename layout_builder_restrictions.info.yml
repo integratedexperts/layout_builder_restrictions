@@ -9,3 +9,5 @@ dependencies:
   - drupal:layout_builder
 test_dependencies:
   - layout_library:layout_library
+  - mini_layouts:mini_layouts
+  - dashboards:dashboards
