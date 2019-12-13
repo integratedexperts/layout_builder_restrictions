@@ -201,7 +201,7 @@ trait PluginHelperTrait {
    *   The section storage manager.
    */
   private function sectionStorageManager() {
-    return $this->sectionStorageManager ?: \Drupal::service('plugin.manager.layout_builder.section_storage');
+    return $this->sectionStorageManager ?? \Drupal::service('plugin.manager.layout_builder.section_storage');
   }
 
   /**
