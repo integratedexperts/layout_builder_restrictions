@@ -154,7 +154,7 @@ trait PluginHelperTrait {
     if ($requested_value == 'storage') {
       return $storage;
     }
-    if (!$view_display) {
+    if (empty($view_display)) {
       $view_display = $storage->load($context);
     }
     if ($requested_value == 'view_display') {
