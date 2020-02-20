@@ -3,6 +3,7 @@ core: 8.x
 core_version_requirement: ^8 || ^9
 description: 'Manage which fields & layouts are available in Layout Builder'
 type: module
+package: 'Layout Builder'
 php: 7.0
 dependencies:
   - drupal:system (>=8.5.0-rc1)
