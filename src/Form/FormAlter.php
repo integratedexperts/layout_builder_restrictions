@@ -196,7 +196,7 @@ class FormAlter implements ContainerInjectionInterface {
             $definition->getIcon(60, 80, 1, 3),
             [
               '#type' => 'container',
-              '#children' => $definition->getLabel(),
+              '#children' => $definition->getLabel() . ' (' . $plugin_id . ')',
             ],
           ],
           '#states' => [
