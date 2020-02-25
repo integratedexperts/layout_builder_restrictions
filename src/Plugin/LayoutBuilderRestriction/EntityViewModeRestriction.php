@@ -10,6 +10,7 @@ use Drupal\layout_builder\OverridesSectionStorageInterface;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\layout_builder_restrictions\Traits\PluginHelperTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * EntityViewModeRestriction Plugin.
@@ -92,7 +93,7 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
       if (!empty($allowed_blocks)) {
         foreach ($definitions as $delta => $definition) {
           $original_delta = $delta;
-          $category = (string) $definition['category'];
+          $category = $this->getUntranslatedCategory($definition['category']);
           // Custom blocks get special treatment.
           if ($definition['provider'] == 'block_content') {
             // 'Custom block types' are disregarded if 'Custom blocks'
@@ -166,12 +167,7 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
 
     // Load the plugin definition.
     if ($definition = $this->blockManager()->getDefinition($block_id)) {
-      if (is_string($definition['category'])) {
-        $category = $definition['category'];
-      }
-      else {
-        $category = $definition['category']->__tostring();
-      }
+      $category = $this->getUntranslatedCategory($definition['category']);
       if ($category == "Custom") {
         // Rename to match Layout Builder Restrictions naming.
         $category = "Custom blocks";

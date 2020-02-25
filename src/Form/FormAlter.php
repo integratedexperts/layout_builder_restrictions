@@ -103,18 +103,22 @@ class FormAlter implements ContainerInjectionInterface {
       ];
       $third_party_settings = $display->getThirdPartySetting('layout_builder_restrictions', 'entity_view_mode_restriction', []);
       $allowed_blocks = (isset($third_party_settings['allowed_blocks'])) ? $third_party_settings['allowed_blocks'] : [];
-      foreach ($this->getBlockDefinitions($display) as $category => $blocks) {
+      foreach ($this->getBlockDefinitions($display) as $category => $data) {
+        $title = $data['label'];
+        if (!empty($data['translated_label'])) {
+          $title = $data['translated_label'];
+        }
         $category_form = [
           '#type' => 'fieldset',
-          '#title' => $category,
+          '#title' => $title,
           '#parents' => ['layout_builder_restrictions', 'allowed_blocks'],
         ];
         $category_setting = in_array($category, array_keys($allowed_blocks)) ? "restricted" : "all";
         $category_form['restriction_behavior'] = [
           '#type' => 'radios',
           '#options' => [
-            "all" => t('Allow all existing & new %category blocks.', ['%category' => $category]),
-            "restricted" => t('Choose specific %category blocks:', ['%category' => $category]),
+            "all" => t('Allow all existing & new %category blocks.', ['%category' => $data['label']]),
+            "restricted" => t('Choose specific %category blocks:', ['%category' => $data['label']]),
           ],
           '#default_value' => $category_setting,
           '#parents' => [
@@ -124,7 +128,7 @@ class FormAlter implements ContainerInjectionInterface {
             'restriction',
           ],
         ];
-        foreach ($blocks as $block_id => $block) {
+        foreach ($data['definitions'] as $block_id => $block) {
           $enabled = FALSE;
           if ($category_setting == 'restricted' && in_array($block_id, $allowed_blocks[$category])) {
             $enabled = TRUE;
