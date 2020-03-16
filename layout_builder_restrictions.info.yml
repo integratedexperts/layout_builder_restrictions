@@ -5,6 +5,7 @@ description: 'Manage which fields & layouts are available in Layout Builder'
 type: module
 package: 'Layout Builder'
 php: 7.0
+configure: layout_builder_restrictions.restriction_plugin_config_form
 dependencies:
   - drupal:system (>=8.5.0-rc1)
   - drupal:layout_builder
