@@ -40,6 +40,13 @@ class MoveBlockRestrictionTest extends WebDriverTestBase {
   ];
 
   /**
+   * Specify the theme to be used in testing.
+   *
+   * @var string
+   */
+  protected $defaultTheme = 'classy';
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() {
@@ -193,8 +200,8 @@ class MoveBlockRestrictionTest extends WebDriverTestBase {
     $element->click();
     $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-all"]');
     $assert_session->checkboxChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-all');
-    $assert_session->checkboxNotChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-restricted');
-    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-restricted"]');
+    $assert_session->checkboxNotChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-whitelisted');
+    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-whitelisted"]');
     $element->click();
     $page->pressButton('Save');
 
@@ -231,8 +238,8 @@ class MoveBlockRestrictionTest extends WebDriverTestBase {
     $element->click();
     $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-all"]');
     $assert_session->checkboxChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-all');
-    $assert_session->checkboxNotChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-restricted');
-    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-restricted"]');
+    $assert_session->checkboxNotChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-whitelisted');
+    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-whitelisted"]');
     $element->click();
     $page->pressButton('Save');
     $this->assertSession()->assertWaitOnAjaxRequest();
@@ -330,8 +337,8 @@ class MoveBlockRestrictionTest extends WebDriverTestBase {
     $element->click();
     $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-custom-blocks-restriction-all"]');
     $assert_session->checkboxChecked('edit-layout-builder-restrictions-allowed-blocks-custom-blocks-restriction-all');
-    $assert_session->checkboxNotChecked('edit-layout-builder-restrictions-allowed-blocks-custom-blocks-restriction-restricted');
-    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-custom-blocks-restriction-restricted"]');
+    $assert_session->checkboxNotChecked('edit-layout-builder-restrictions-allowed-blocks-custom-blocks-restriction-whitelisted');
+    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-custom-blocks-restriction-whitelisted"]');
     $element->click();
     $page->pressButton('Save');
 
@@ -363,14 +370,14 @@ class MoveBlockRestrictionTest extends WebDriverTestBase {
     // The order should not have changed after save.
     $this->assertRegionBlocksOrder(0, 'first', $expected_block_order);
 
-    // Allow Basic Block, but not Alternate Block.
+    // Allow Alternate Block, but not Basic block.
     $this->drupalGet(static::FIELD_UI_PREFIX . "/display/default");
     $element = $page->find('xpath', '//*[@id="edit-layout-layout-builder-restrictions-allowed-blocks"]/summary');
     $element->click();
     // Do not apply individual block level restrictions.
     $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-custom-blocks-restriction-all"]');
     $element->click();
-    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-custom-block-types-restriction-restricted"]');
+    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-custom-block-types-restriction-whitelisted"]');
     $element->click();
     // Whitelist all "Alternate" block types.
     $page->checkField('layout_builder_restrictions[allowed_blocks][Custom block types][alternate]');
@@ -426,6 +433,8 @@ class MoveBlockRestrictionTest extends WebDriverTestBase {
     $this->moveBlockWithKeyboard('up', 'Basic Block 1', ['Basic Block 1 (current)*', 'Alternate Block 1']);
     $page->pressButton('Move');
     $this->assertSession()->assertWaitOnAjaxRequest();
+    $modal = $page->find('css', '#drupal-off-canvas p');
+    $this->assertNull($modal);
     $page->pressButton('Save layout');
     // Reorder Alternate block.
     $page->clickLink('Manage layout');

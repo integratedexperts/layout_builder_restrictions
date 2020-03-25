@@ -57,6 +57,8 @@ trait PluginHelperTrait {
       if (empty($data['definitions'])) {
         unset($grouped_definitions[$category]);
       }
+      // Ensure all block_content definitions are included in the
+      // 'Custom blocks' category.
       foreach ($data['definitions'] as $key => $definition) {
         if (in_array($key, $custom_blocks)) {
           if (!isset($grouped_definitions['Custom blocks'])) {
@@ -65,16 +67,13 @@ trait PluginHelperTrait {
               'data' => [],
             ];
           }
-          $grouped_definitions['Custom blocks']['definitions'][$key] = $definition;
           // Remove this block_content from its previous category so
           // that it is defined only in one place.
           unset($grouped_definitions[$category]['definitions'][$key]);
+          $grouped_definitions['Custom blocks']['definitions'][$key] = $definition;
         }
       }
     }
-    // Do not use the 'Custom' group category: it is now redundant, and
-    // it is less accurate than relying on block_content.
-    unset($grouped_definitions['Custom']);
 
     // Generate a list of custom block types under the
     // 'Custom block types' namespace.
@@ -145,9 +144,32 @@ trait PluginHelperTrait {
   }
 
   /**
+   * Helper function to check the default block category whitelist.
+   *
+   * @param string $category
+   *   The identifier of the category.
+   * @param array $allowed_block_categories.
+   *   The entity view mode's allowed block categories.
+   *
+   * @return bool
+   *   Whether or not the category is restricted.
+   */
+  public function categoryIsRestricted($category, array $allowed_block_categories) {
+    if (!empty($allowed_block_categories)) {
+      // There is no explicit indication whether the blocks from
+      // this category should be restricted. Check the default whitelist.
+      if (!in_array($category, $allowed_block_categories)) {
+        // This block's category has not been whitelisted.
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
    * Helper function to return an untranslated block Category.
    *
-   * @param mixed $string
+   * @param mixed $category
    *   The block category name or object.
    *
    * @return string
@@ -156,13 +178,18 @@ trait PluginHelperTrait {
   public function getUntranslatedCategory($category) {
     if ($category instanceof TranslatableMarkup) {
       $output = $category->getUntranslatedString();
+      // Rename to match Layout Builder Restrictions naming.
       if ($output == '@entity fields') {
         $output = 'Content fields';
+      }
+      if ($output == "Custom") {
+        $output = "Custom blocks";
       }
     }
     else {
       $output = (string) $category;
     }
+
     return $output;
   }
 

@@ -29,7 +29,9 @@ class LanguageCategoriesTest extends WebDriverTestBase {
   ];
 
   /**
-   * {@inheritdoc}
+   * Specify the theme to be used in testing.
+   *
+   * @var string
    */
   protected $defaultTheme = 'stable';
 
@@ -97,7 +99,8 @@ class LanguageCategoriesTest extends WebDriverTestBase {
     ]);
     if (!empty($strings)) {
       $string = reset($strings);
-    } else {
+    }
+    else {
       $string = $locale_storage->createString([
         'source' => 'Help',
       ])->save();
@@ -172,14 +175,14 @@ class LanguageCategoriesTest extends WebDriverTestBase {
     $element->click();
     $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-all"]');
     $assert_session->checkboxChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-all');
-    $assert_session->checkboxNotChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-restricted');
+    $assert_session->checkboxNotChecked('edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-whitelisted');
     $assert_session->checkboxChecked('edit-layout-builder-restrictions-allowed-blocks-inline-blocks-restriction-all');
-    $assert_session->checkboxNotChecked('edit-layout-builder-restrictions-allowed-blocks-inline-blocks-restriction-restricted');
+    $assert_session->checkboxNotChecked('edit-layout-builder-restrictions-allowed-blocks-inline-blocks-restriction-whitelisted');
     // Restrict all 'Content' fields from options.
-    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-restricted"]');
+    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-content-fields-restriction-whitelisted"]');
     $element->click();
     // Restrict the Hjelp block.
-    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-help-restriction-restricted"]');
+    $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-help-restriction-whitelisted"]');
     $element->click();
     $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-help-help-block"]');
     $element->click();

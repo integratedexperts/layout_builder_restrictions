@@ -89,3 +89,69 @@ function layout_builder_restrictions_update_8210() {
     return $message;
   }
 }
+
+/**
+ * Add new configuration defaults for default block & layout settings.
+ */
+function layout_builder_restrictions_update_8211(&$sandbox) {
+  // When upgrading to 2.6, new configuration keys are added to control
+  // whether newly available block categories & layouts are restricted.
+  // Set the defaults to "allowed" for both, to match previous site behavior.
+  // Sites may then explictly restrict new blocks & layouts going forward.
+  $config_factory = \Drupal::configFactory();
+
+  if (!isset($sandbox['count'])) {
+    $sandbox['ids'] = $config_factory->listAll('core.entity_view_display.');
+    $sandbox['count'] = count($sandbox['ids']);
+  }
+
+  $ids = array_splice($sandbox['ids'], 0, 50);
+  foreach ($ids as $id) {
+    $display = $config_factory->getEditable($id);
+    if ($display->get('third_party_settings.layout_builder_restrictions')) {
+      $settings = $display->get('third_party_settings.layout_builder_restrictions');
+      if (!isset($settings['allowed_block_categories'])) {
+        // The empty array means "newly available block categories are allowed
+        // by default," which maintains how restrictions behaved prior to the
+        // new ability to set the default for newly available categories.
+        $display
+          ->set('third_party_settings.layout_builder_restrictions.allowed_block_categories', [])
+          ->save();
+      }
+
+    }
+  }
+
+  $sandbox['#finished'] = empty($sandbox['ids']) ? 1 : ($sandbox['count'] - count($sandbox['ids'])) / $sandbox['count'];
+}
+
+/**
+ * Relocate 'allowed_blocks' to 'whitelisted_blocks'.
+ */
+function layout_builder_restrictions_update_8212(&$sandbox) {
+  // When upgrading to 2.6, configuration for 'allowed_blocks'
+  // is relocated to 'whitelisted_blocks' to distinguish from newly available
+  // 'blacklisted_blocks' (which will default to an empty array for existing
+  // sites).
+  $config_factory = \Drupal::configFactory();
+
+  if (!isset($sandbox['count'])) {
+    $sandbox['ids'] = $config_factory->listAll('core.entity_view_display.');
+    $sandbox['count'] = count($sandbox['ids']);
+  }
+
+  $ids = array_splice($sandbox['ids'], 0, 50);
+  foreach ($ids as $id) {
+    $display = $config_factory->getEditable($id);
+    if ($display->get('third_party_settings.layout_builder_restrictions')) {
+      $allowed_blocks_by_category = $display->get('third_party_settings.layout_builder_restrictions.entity_view_mode_restriction.allowed_blocks');
+      $display
+        ->clear('third_party_settings.layout_builder_restrictions.entity_view_mode_restriction.allowed_blocks')
+        ->set('third_party_settings.layout_builder_restrictions.entity_view_mode_restriction.whitelisted_blocks', $allowed_blocks_by_category)
+        ->set('third_party_settings.layout_builder_restrictions.entity_view_mode_restriction.blacklisted_blocks', [])
+        ->save();
+    }
+  }
+
+  $sandbox['#finished'] = empty($sandbox['ids']) ? 1 : ($sandbox['count'] - count($sandbox['ids'])) / $sandbox['count'];
+}
