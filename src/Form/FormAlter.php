@@ -90,12 +90,12 @@ class FormAlter implements ContainerInjectionInterface {
       $form['#entity_builders'][] = [$this, 'entityFormEntityBuild'];
       $allowed_block_categories = $display->getThirdPartySetting('layout_builder_restrictions', 'allowed_block_categories', []);
       $form['layout']['layout_builder_restrictions']['allowed_block_categories'] = [
-        '#title' => t('Default restriction for new categories of blocks not listed below.'),
+        '#title' => $this->t('Default restriction for new categories of blocks not listed below.'),
         '#description_display' => 'before',
         '#type' => 'radios',
         '#options' => [
-          "allowed" => t('Allow all blocks from newly available categories.'),
-          "restricted" => t('Restrict all blocks from newly available categories.'),
+          "allowed" => $this->t('Allow all blocks from newly available categories.'),
+          "restricted" => $this->t('Restrict all blocks from newly available categories.'),
         ],
         '#parents' => ['layout_builder_restrictions', 'allowed_block_categories'],
         '#default_value' => !empty($allowed_block_categories) ? "restricted" : "allowed",
@@ -114,7 +114,7 @@ class FormAlter implements ContainerInjectionInterface {
       // Block settings.
       $form['layout']['layout_builder_restrictions']['allowed_blocks'] = [
         '#type' => 'details',
-        '#title' => t('Blocks available for placement'),
+        '#title' => $this->t('Blocks available for placement'),
         '#states' => [
           'disabled' => [
             ':input[name="layout[enabled]"]' => ['checked' => FALSE],
@@ -156,9 +156,9 @@ class FormAlter implements ContainerInjectionInterface {
         $category_form['restriction_behavior'] = [
           '#type' => 'radios',
           '#options' => [
-            "all" => t('Allow all existing & new %category blocks.', ['%category' => $data['label']]),
-            "whitelisted" => t('Allow specific %category blocks (whitelist):', ['%category' => $data['label']]),
-            "blacklisted" => t('Restrict specific %category blocks (blacklist):', ['%category' => $data['label']]),
+            "all" => $this->t('Allow all existing & new %category blocks.', ['%category' => $data['label']]),
+            "whitelisted" => $this->t('Allow specific %category blocks (whitelist):', ['%category' => $data['label']]),
+            "blacklisted" => $this->t('Restrict specific %category blocks (blacklist):', ['%category' => $data['label']]),
           ],
           '#default_value' => $category_setting,
           '#parents' => [
@@ -196,7 +196,7 @@ class FormAlter implements ContainerInjectionInterface {
         if ($category == 'Custom blocks' || $category == 'Custom block types') {
           $category_form['description'] = [
             '#type' => 'container',
-            '#children' => t('<p>In the event both <em>Custom Block Types</em> and <em>Custom Blocks</em> restrictions are enabled, <em>Custom Block Types</em> restrictions are disregarded.</p>'),
+            '#children' => $this->t('<p>In the event both <em>Custom Block Types</em> and <em>Custom Blocks</em> restrictions are enabled, <em>Custom Block Types</em> restrictions are disregarded.</p>'),
             '#states' => [
               'visible' => [
                 ':input[name="layout_builder_restrictions[allowed_blocks][' . $category . '][restriction]"]' => ['value' => "restricted"],
@@ -210,7 +210,7 @@ class FormAlter implements ContainerInjectionInterface {
       $allowed_layouts = (isset($third_party_settings['allowed_layouts'])) ? $third_party_settings['allowed_layouts'] : [];
       $layout_form = [
         '#type' => 'details',
-        '#title' => t('Layouts available for sections'),
+        '#title' => $this->t('Layouts available for sections'),
         '#parents' => ['layout_builder_restrictions', 'allowed_layouts'],
         '#states' => [
           'disabled' => [
@@ -224,8 +224,8 @@ class FormAlter implements ContainerInjectionInterface {
       $layout_form['layout_restriction'] = [
         '#type' => 'radios',
         '#options' => [
-          "all" => t('Allow all existing & new layouts.'),
-          "restricted" => t('Allow only specific layouts:'),
+          "all" => $this->t('Allow all existing & new layouts.'),
+          "restricted" => $this->t('Allow only specific layouts:'),
         ],
         '#default_value' => !empty($allowed_layouts) ? "restricted" : "all",
       ];

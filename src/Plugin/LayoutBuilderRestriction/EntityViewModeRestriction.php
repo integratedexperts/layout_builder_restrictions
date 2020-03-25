@@ -253,7 +253,7 @@ class EntityViewModeRestriction extends LayoutBuilderRestrictionBase {
         }
       }
       if ($has_restrictions) {
-        return t("There is a restriction on %block placement in the %layout %region region for %type content.", [
+        return $this->t("There is a restriction on %block placement in the %layout %region region for %type content.", [
           "%block" => $definition['admin_label'],
           "%layout" => $layout_id_to,
           "%region" => $region_to,

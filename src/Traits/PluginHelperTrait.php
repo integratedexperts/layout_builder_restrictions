@@ -148,7 +148,7 @@ trait PluginHelperTrait {
    *
    * @param string $category
    *   The identifier of the category.
-   * @param array $allowed_block_categories.
+   * @param array $allowed_block_categories
    *   The entity view mode's allowed block categories.
    *
    * @return bool

@@ -131,7 +131,8 @@ class BlacklistedRestrictionsTest extends WebDriverTestBase {
     $element->click();
     $page->pressButton('Save');
 
-    // Establish that the 'body' field is still present, because it has not been explicitly blacklisted.
+    // Establish that the 'body' field is still present,
+    // because it has not been explicitly blacklisted.
     $this->drupalGet("$field_ui_prefix/display/default");
     $assert_session->linkExists('Manage layout');
     $this->clickLink('Manage layout');
@@ -160,7 +161,8 @@ class BlacklistedRestrictionsTest extends WebDriverTestBase {
     $assert_session->checkboxChecked('edit-layout-builder-restrictions-allowed-blocks-inline-blocks-restriction-all');
     $assert_session->checkboxNotChecked('edit-layout-builder-restrictions-allowed-blocks-inline-blocks-restriction-blacklisted');
 
-    // Select 'blacklist' inline block types, but do not specify any to be blacklisted.
+    // Select 'blacklist' inline block types, but do not specify any to be
+    // blacklisted.
     $element = $page->find('xpath', '//*[@id="edit-layout-builder-restrictions-allowed-blocks-inline-blocks-restriction-blacklisted"]');
     $element->click();
     $page->pressButton('Save');
@@ -236,4 +238,5 @@ class BlacklistedRestrictionsTest extends WebDriverTestBase {
     $assert_session->linkExists('Basic Block 2');
     $assert_session->linkNotExists('Alternate Block 1');
   }
+
 }

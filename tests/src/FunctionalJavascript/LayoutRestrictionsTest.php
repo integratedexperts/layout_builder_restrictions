@@ -2,8 +2,6 @@
 
 namespace Drupal\Tests\layout_builder_restrictions\FunctionalJavascript;
 
-use Drupal\block_content\Entity\BlockContent;
-use Drupal\block_content\Entity\BlockContentType;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 
 /**
