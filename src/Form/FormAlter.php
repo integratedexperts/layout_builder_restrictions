@@ -114,7 +114,7 @@ class FormAlter implements ContainerInjectionInterface {
       // Block settings.
       $form['layout']['layout_builder_restrictions']['allowed_blocks'] = [
         '#type' => 'details',
-        '#title' => $this->t('Blocks available for placement'),
+        '#title' => $this->t('Blocks available for placement (all layouts & regions)'),
         '#states' => [
           'disabled' => [
             ':input[name="layout[enabled]"]' => ['checked' => FALSE],

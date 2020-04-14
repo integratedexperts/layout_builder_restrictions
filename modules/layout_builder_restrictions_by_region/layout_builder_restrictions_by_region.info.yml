@@ -1,0 +1,9 @@
+name: Layout Builder Restrictions By Region
+core: 8.x
+description: 'Restricts layouts and blocks per layout region'
+type: module
+dependencies:
+  - drupal:layout_builder
+  - drupal:layout_builder_restrictions
+test_dependencies:
+  - layout_library:layout_library
