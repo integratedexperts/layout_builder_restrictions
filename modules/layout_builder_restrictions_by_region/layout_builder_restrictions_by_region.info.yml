@@ -3,6 +3,7 @@ core: 8.x
 core_version_requirement: ^8 || ^9
 description: 'Restricts layouts and blocks per layout region'
 type: module
+package: 'Layout Builder'
 dependencies:
   - drupal:layout_builder
   - drupal:layout_builder_restrictions
