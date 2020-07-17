@@ -157,8 +157,8 @@ class FormAlter implements ContainerInjectionInterface {
           '#type' => 'radios',
           '#options' => [
             "all" => $this->t('Allow all existing & new %category blocks.', ['%category' => $data['label']]),
-            "whitelisted" => $this->t('Allow specific %category blocks (whitelist):', ['%category' => $data['label']]),
-            "blacklisted" => $this->t('Restrict specific %category blocks (blacklist):', ['%category' => $data['label']]),
+            "whitelisted" => $this->t('Allow specific %category blocks:', ['%category' => $data['label']]),
+            "blacklisted" => $this->t('Restrict specific %category blocks:', ['%category' => $data['label']]),
           ],
           '#default_value' => $category_setting,
           '#parents' => [

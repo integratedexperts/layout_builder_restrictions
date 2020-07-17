@@ -34,7 +34,7 @@ class DashboardsIntegrationTest extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     $this->strictConfigSchema = NULL;
     parent::setUp();
 
