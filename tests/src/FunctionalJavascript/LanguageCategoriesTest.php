@@ -38,7 +38,7 @@ class LanguageCategoriesTest extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp(): void {
+  protected function setUp() {
     parent::setUp();
 
     // Create a node bundle.
