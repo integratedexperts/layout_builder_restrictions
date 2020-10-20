@@ -229,6 +229,14 @@ class AllowedBlocksForm extends FormBase {
         ],
       ];
       $category_form['restriction_behavior']['#default_value'] = $this->getCategoryBehavior($category, $temp_data);
+      $category_form['allowed_blocks'] = [
+        '#type' => 'container',
+        '#states' => [
+          'invisible' => [
+            ':input[name="allowed_blocks[' . $category . '][restriction]"]' => ['value' => "all"],
+          ],
+        ],
+      ];
       foreach ($data['definitions'] as $block_id => $block) {
         $category_form['allowed_blocks'][$block_id] = [
           '#type' => 'checkbox',
@@ -239,11 +247,6 @@ class AllowedBlocksForm extends FormBase {
             $category,
             'allowed_blocks',
             $block_id,
-          ],
-          '#states' => [
-            'invisible' => [
-              ':input[name="allowed_blocks[' . $category . '][restriction]"]' => ['value' => "all"],
-            ],
           ],
         ];
       }
