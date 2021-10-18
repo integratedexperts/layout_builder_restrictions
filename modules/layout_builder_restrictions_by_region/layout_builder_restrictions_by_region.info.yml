@@ -6,6 +6,6 @@ type: module
 package: 'Layout Builder'
 dependencies:
   - drupal:layout_builder
-  - drupal:layout_builder_restrictions
+  - layout_builder_restrictions:layout_builder_restrictions
 test_dependencies:
   - layout_library:layout_library
